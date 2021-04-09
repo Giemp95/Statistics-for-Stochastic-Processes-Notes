@@ -1,0 +1,326 @@
+\section{Lecture 5}
+\label{lecture5}
+
+\begin{center}
+    \textbf{Elements of ergodic theory}
+\end{center}
+
+There is one more property of time series that implies ergodicity that sometimes is easier to verify than the previous property that we have seen; this is the \textbf{mixing} property. For stochastic processes, mixing means asymptotically independence between the random variables of the sequence. This requires an explicit way to measure the dependence between two different random variables, and we have no time to deal with this. Instead, we will focus on properties similar to the strong law of large numbers.
+
+\begin{definition}
+    A time series $(X_t)$ has the \textbf{mean-ergodic} property (almost surely) if 
+    \[
+        \exists\mu\in\R\ s.t.\ \mean{X}_n\impliesas\mu  
+    \]
+\end{definition}
+
+Suppose that we have a strong stationary time series $(X_t)$ with $X_t\in\el{1}\ \forall t$. Then $\mean{X}_n\impliesas\mean{X}\in\el{1}$ by the strong ergodic theorem. But if we add that the time series is also ergodic we recover the mean-ergodic property in the almost sure way: $\mean{X}_n\stackrel{a.s}{\implies}\mu=\expect{X_t}$. We will now formalize and prove this result.
+
+\begin{theorem}
+    (\textbf{Birrhoff ergodic theorem}) Consider a time series $(X_t)$ which is:
+    \begin{itemize}
+        \item strong stationary;
+        \item $X_t\in\el{1},\ \forall t$;
+        \item ergodic;
+    \end{itemize}
+    then
+    \[
+        \mean{X}_n\impliesas\mu=\expect{X_t} 
+    \]
+\end{theorem}
+
+\begin{proof}
+    As the time series is strong stationary and has finite mean, we can apply the strong ergodic theorem:
+    \[
+        \mean{X}_n\impliesas\mean{X}\in\el{1}  
+    \]
+    Consider
+    \begin{equation*}
+        \begin{split}
+            A&=\set{\omega\in\Omega/\mean{X}\le a},\ a\in\R\\
+            &=\set{\omega\in\Omega/\lim_n\mean{X}\le a}\in\Tau\\
+        \end{split}
+    \end{equation*}
+    As the time series is ergodic by hypotesis $\prob{A}=0\vee\prob{A}=1$. Since $\prob{\mean{X}\le a}=F_{\mean{X}}(a)$, we have that $F_{\mean{X}}()$ is a step function. This means that the random variable $\mean{X}\eqas const$, but which constant? As $\mean{X}\stackrel{\el{1}}{\implies}\mean{X}$, from the corollary of the strong ergodic theorem, we have that $\prob{\mean{X}}=\mu$, which is the constant we were searching for. Therefore $\mean{X}\stackrel{a.s.}{\implies}\mu$.
+\end{proof}
+
+\begin{exercise}
+    Consider the time series $(X_t)$ with $X_t=\mu t+Wt$ with $\mu>0$ and $(X_t)\sim\mathcal{IID}(0,\sigma^2)$. Check if $X_t$ has the mean-ergodic property (a.s.).
+\end{exercise}
+
+Now we will see some results on ergodic time series without proving them.
+
+\begin{theorem}
+    Consider a time series $(W_t)$ such that:
+    \begin{itemize}
+        \item $(X_t)\sim\mathcal{IID}$;
+        \item $f:\R^\N\mapsto\R$ measurable;
+        \item $X_t\eqas f(W_s,\ s\le t)\ \forall t\in\Z$;
+    \end{itemize}
+    then $(X_t)$ is ergodic.
+\end{theorem}
+
+\begin{theorem}
+    Consider a time series $(W_t)$ such that:
+    \begin{itemize}
+        \item $(W_t)$ is strong stationary;
+        \item $(W_t)$ is ergodic;
+        \item $f:\R^\N\mapsto\R$ measurable;
+        \item $X_t\eqas f(W_s,\ s\ge t)\ \forall t\in\Z$;
+    \end{itemize}
+    then $(X_t)$ is ergodic.
+\end{theorem}
+
+\begin{theorem}
+    Consider a strong stationary time series $(X_t)$. Then
+    \[
+        (X_t)\iff\forall k\ge 1,\ \forall A\in\mathcal{B}(\R^k)\ \lim_{n\to\infty}\frac{1}{n}\sum_{j=1}^{n}\1_{(X_j,...,X_{j+k})\in A}=\prob{(X_0,...,X_k)\in A}
+    \]
+    is sufficient and necessary for $(X_t)$ to be ergodic.
+\end{theorem}
+
+\begin{definition}
+    A time series $(X_t)$ as the mean-ergodic property in the $\el{2}$ sense if 
+    \[
+        \exists\mu\in\R\ s.t.\ \mean{X}_n\stackrel{\el{2}}{\implies}\mu  
+    \]
+\end{definition}
+
+\begin{remark}
+    The constant $\mu$ could also not be the mean of the process; this depends on the process.
+\end{remark}
+
+\begin{remark}
+    $\mean{X}_n\stackrel{\el{2}}{\implies}\mu\iff\lim_{n\to\infty}\expect{(\mean{X}_n-\mu)^2}=0$
+\end{remark}
+
+\begin{remark}
+    When $\mu=\expect{\mean{X}_n}$ then $\mean{X}_n\stackrel{\el{2}}{\implies}\mu\iff\lim_{\mu\to\infty}Var(\mean{X}_n)=0$
+\end{remark}
+
+\begin{exercise}
+    Consider a random walk $(X_t)$ such that
+    \begin{equation*}
+        X_t=\begin{cases}
+            0&t\le0\\
+            X_{t-1}+W_t&t\ge1\\
+        \end{cases}
+    \end{equation*}
+    with $(W_t)\sim\mathcal{IID}(0,\sigma^2)$. Check if $(X_t)$ has the mean-ergodic property in $\el{2}$.
+\end{exercise}
+
+\begin{theorem}
+    Consider a time series $(X_t)$ such that:
+    \begin{itemize}
+        \item $(X_t)$ stationary;
+        \item $\lim_{h\to\infty}\gamma(h)=0$;
+    \end{itemize}
+    then $(X_t)\stackrel{\el{2}}{\implies}\mu=\expect{X_t}$.
+\end{theorem}
+
+\begin{proof}
+    Start by calculate the variance of the sequence:
+    \begin{equation*}
+        \begin{split}
+            Var(\mean{X}_n)&=\expect{\left(\frac{1}{n}\sum_{t=1}^nX_t-\mu\right)^2}\\
+            &=\expect{\frac{1}{n}\left(\sum_{t=1}^nX_t-n\mu\right)}^2\\
+            &=\expect{\frac{1}{n^2}\left(\sum_{t=1}^n(X_t-\mu)\right)^2}\\
+            &=\frac{1}{n^2}\sum_{t=1}^n\sum_{s=1}^{n}\expect{(X_t-\mu)(X_s-\mu)}\\
+            &=\frac{1}{n^2}\sum_{t=1}^n\sum_{s=1}^{n}cov(X_t,X_s)\\
+            &=\frac{1}{n^2}\sum_{t=1}^n\sum_{s=1}^{n}\gamma(t-s)\\
+            &=\frac{1}{n^2}\sum_{h=-(n-1)}^{n-1}(n-\abs{h})\gamma(h)\\
+            &=\frac{1}{n}\sum_{h=-(n-1)}^{n-1}\left(1-\frac{\abs{h}}{n}\right)\gamma(h)\\
+            &=\frac{1}{n}\sum_{\abs{h}<n}\left(1-\frac{\abs{h}}{n}\right)\gamma(h)\\
+            &\le\frac{1}{n}\sum_{\abs{h}<n}\abs{\gamma(h)}\\
+            &=\frac{\gamma(0)}{n}+\frac{1}{n}\left(\sum_{h=-(n-1)}^{-1}\abs{\gamma(h)}+\sum_{h=1}^{n-1}\abs{\gamma(h)}\right)\\
+            &=\frac{\gamma(0)}{n}+\frac{1}{n}\left(\sum_{j=(n-1)}^{1}\abs{\gamma(-j)}+\sum_{h=1}^{n-1}\abs{\gamma(h)}\right)\ \ \ h=-j\\
+            &=\frac{\gamma(0)}{n}+\frac{1}{n}\left(\sum_{j=1}^{n-1}\abs{\gamma(j)}+\sum_{h=1}^{n-1}\abs{\gamma(h)}\right)\\
+            &=\frac{\gamma(0)}{n}+\frac{2}{n}\sum_{h=1}^{n-1}\abs{\gamma(h)}\\
+            &=\frac{\gamma(0)}{n}-2\frac{\abs{\gamma(n)}}{n}+2\frac{\abs{\gamma(n)}}{n}+\frac{2}{n}\sum_{h=1}^{n-1}\abs{\gamma(h)}\\
+            &=\frac{\gamma(0)}{n}-2\frac{\abs{\gamma(n)}}{n}+\frac{2}{n}\sum_{h=1}^{n}\abs{\gamma(h)}\\
+        \end{split}
+    \end{equation*}
+    Therefore
+    \[
+        \lim_{n\to\infty}Var(\mean{X}_n)=\lim_{n\to\infty}\left(\frac{\gamma(0)}{n}-2\frac{\abs{\gamma(n)}}{n}+\frac{2}{n}\sum_{h=1}^{n}\abs{\gamma(h)}\right)
+    \]
+    Thanks to the corollary of Cesaro's lemma, we know that
+    \[
+        \set{b_i}\ s.t.\ \lim_{i\to\infty}b_i=b\in\R\implies\lim_{n\to\infty}\frac{1}{n}\sum_{i=1}^nb_i=b
+    \]
+    Assume that $b_i\Leftarrow\abs{\gamma(h)}$. We know that $\lim_{h\to\infty}=0\implies\lim_{n\to\infty}\frac{1}{n}\sum_{h=1}^n\abs{\gamma(h)}=0$. Now we can finally state that
+    \[
+        \lim_{n\to\infty}Var(\mean{X}_n)=0  
+    \]
+    ending the proof of this theorem.
+\end{proof}
+
+\begin{corollary}
+    If $(X_t)$ is a stationary time series and $\lim_{h\to\infty}\gamma(h)=0$ then $\mean{X}_n\stackrel{\mathbb{P}}{\implies}\mu=\expect{X_t}$. This means that $\mean{X}_n$ is a consisten estimator of $\mu$.
+\end{corollary}
+
+\begin{definition}
+    The ACF is said to be \textbf{absolutely sommable} if
+    \[
+        \sum_{h=-\infty}^{+\infty}\abs{\gamma(h)}<\infty  
+    \]
+\end{definition}
+
+\begin{theorem}
+    Consider a stationary time series $(X_t)$ with $\gamma()$ absolutely sommable. Then
+    \[
+        \lim_{n\to\infty}nVar(\mean{X}_n)=\sum_{h=-\infty}^{+\infty}\gamma(h)  
+    \]
+    which means that
+    \[
+        Var(\mean{X}_n)\sim\frac{1}{n}\sum_{h=-\infty}^{+\infty}\gamma(h)  
+    \]
+\end{theorem}
+
+\begin{proof}
+    From the previous proof:
+    \[
+        nVar(\mean{X}_n)=\sum_{\abs{h}<n}\left(1-\frac{\abs{h}}{n}\right)\gamma(h)\le\sum_{\abs{h}<n}\abs{\gamma(h)}
+    \]
+    Considering now the limit:
+    \[
+        \lim_{n}nVar(\mean{X}_n)\le\lim_{n}\sum_{\abs{h}<n}\abs{\gamma(h)}=\sum_{h=-\infty}^{+\infty}\abs{\gamma(h)}<\infty
+    \]
+    Consider a function:
+    \[
+        f_n(h)=\begin{cases}
+            \left(1-\frac{\abs{h}}{n}\right)\gamma(h)&h=0,\pm1,\pm2,...\pm(n-1)\\
+            0&otherwise\\
+        \end{cases}  
+    \]
+    Suppose to denote with $m$ a counting measure on $\Z$ such that $m(\set{h})=1\ \forall h\in\Z$. Then
+    \[
+        \sum_{\abs{h<n}}\left(1-\frac{\abs{h}}{n}\right)\gamma(h)=\int_{\Z}f_n(h)m\ dh  
+    \]
+    Consider $\set{f_n}$:
+    \begin{itemize}
+        \item $\abs{f_n}\le\abs{\gamma}\ \forall m\in\N\Leftarrow\abs{1-\frac{\abs{h}}{n}}\le1$
+        \item $\abs{\gamma}$ integrable with respect to m $\Leftarrow\int_{\Z}\abs{\gamma(h)}m\ dh=\sum_{h=\infty}^{\infty}\abs{\gamma(h)}<\infty$
+        \item $\lim_{n}f_n(h)=\gamma(h)\ \forall h\in\Z$
+    \end{itemize}
+    From the dominated convergence theorem:
+    \[
+        \lim_n\int_{\Z}f_n(h)m\ dh=\int_\Z\lim_nf_n(h)m\ dh=\int_\Z\gamma(h)m\ dh=\sum_{h=-\infty}^{+\infty}\gamma(h)
+    \]
+    but, since
+    \[
+        \lim_n\int_{\Z}f_n(h)m\ dh=\lim_n\sum_{\abs{h}<n}\left(1-\frac{\abs{h}}{n}\right)\gamma(h)
+    \]
+    we have successfully demonstrated that
+    \[
+        \lim_n\sum_{\abs{h}<n}\left(1-\frac{\abs{h}}{n}\right)\gamma(h)=\sum_{h=-\infty}^{+\infty}\gamma(h)
+    \]
+\end{proof}
+
+\begin{exercise}
+    State if the following time series have the mean-ergodic property in $\el{2}$ sense:
+    \begin{enumerate}
+        \item $\mathcal{IID}(0,\sigma^2)$
+        \item $\mathcal{WN}(0,\sigma^2)$
+        \item $X_t=Y\ with\ Var(Y)<\infty$ 
+    \end{enumerate}
+\end{exercise}
+
+\begin{definition}
+    (From the mean-ergodic theorem) If $(X_t)$ is a stationary time series with $\lim_{h\to\infty}\gamma(h)\ne0$, the it is said to have a \textbf{long term dependence}.
+\end{definition}
+
+In case we have a long-term dependent time series, are we able to say something on the asymptotic time average?
+
+\begin{theorem}
+    If $(X_t)$ is a stationary time series, then $\exists\mean{X}\in\el{2}$ such that $\mean{X}_n\stackrel{\el{2}}{\implies}\mean{X}$. 
+\end{theorem}
+
+If we further remove the stationary property, are we able to say something about the strong ergodic property in $\el{2}$?
+
+\begin{theorem}
+    Consider a time series $(X_t)$ such that:
+    \begin{itemize}
+        \item $\expect{X_t}=\mu_t\ \forall t\in\Z$
+        \item $Var(X_t)=\sigma^2_t<\infty\ \forall t\in\Z$
+        \item $\exists\mu\in\R\ s.t.\ \lim_{t\to\infty}\mu_t=\mu$
+        \item $\lim_{t\to\infty)}cov(\mean{X}_n,X_n)=0$
+    \end{itemize}
+    then $\mean{X}_n\stackrel{\el{2}}{\implies}\mu$.
+\end{theorem}
+
+\begin{corollary}
+    If $(X_t)$ is stationary and $\lim_{n\to\infty}cov(\mean{X}_n,X_n)=0$ then $\mean{X}_n\stackrel{\el{2}}{\implies}\mu=\expect{X_t}$.
+\end{corollary}
+
+\begin{remark}
+    $\lim_{n\to\infty}cov(\mean{X}_n,X_n)=0\iff\lim_{n\to\infty}\frac{1}{n}\sum_{h=0}^{n-1}\gamma(h)=0$.
+\end{remark}
+
+\begin{proof}
+    \begin{equation*}
+        \begin{split}
+            cov(\mean{X}_n,X_n)&=\expect{\left(\frac{1}{n}\sum_{t=1}^nX_t-\mu\right)(X_n*\mu)}\\
+            &=\expect{\frac{1}{n}\left(\sum_{t=1}^n(X_t-\mu)(X_n-\mu)\right)}\\
+            &=\frac{1}{n}\sum_{t=1}^n\expect{(X_t-\mu)(X_n-\mu)}\\
+            &=\frac{1}{n}\left(\gamma(n-1)+\gamma(n-2)+...+\gamma(0)\right)\\
+            &=\frac{1}{n}\sum_{h=0}^{n-1}\gamma(h)\\
+        \end{split}
+    \end{equation*} 
+\end{proof}
+
+\begin{theorem}
+    (Slutsky) If a time series $(X_t)$ is stationary then
+    \[
+        \lim_{n\to\infty}\frac{1}{n}\sum_{h=0}^{n-1}\gamma(h)=0\iff\mean{X}_n\stackrel{\el{2}}{\implies}\mu
+    \]
+\end{theorem}
+
+Then, summing up, the sufficient condition for the mean-ergodic property in $\el{2}$ are:
+\begin{enumerate}
+    \item $\expect{X_t}=\mu_t\ \forall t\in\Z$
+    \item $Var(X_t)=\sigma^2_t<\infty\ \forall t\in\Z$
+    \item $\exists\mu\in\R\ s.t.\ \lim_{t\to\infty}\mu_t=\mu$
+    \item $\lim_{n\to\infty}cov(\mean{X}_n, X_n)=0$
+\end{enumerate}
+
+\begin{example}
+    Suppose $(W_t)\sim\mathcal{IID}(0,\sigma^2)$. Consider:
+    \begin{itemize}
+        \item $X_t=\mu t+W_t,\ \forall t\Leftarrow$ 3. is not true n this case, since $\lim_{t\to\infty}\expect{X_t}=+\infty$.
+        \item $X_t=\begin{cases}0&t\le0\\\sum_{s=1}^tW_s&t\ge1\end{cases}$\\recall that $\expect{X_t}=0\ \forall t$ and $\mean{X}_n=\frac{1}{n}\sum_{t=1}^ntW_{n-t+1}\implies\expect{\mean{X}_n}=0$. Consider also 
+        \begin{equation*}
+            \begin{split}
+                cov(\mean{X}_n,X_n)&=\expect{\mean{X}_n,X_n}\\
+                &=\expect{\frac{1}{n}(W_n+2W_{n-1}+...+nW_1)(W_1+W_2+...+W_n)}\\
+                &=\frac{1}{n}\set{\sigma^2+2\sigma^2+...+n\sigma^2}\\
+                &=\frac{\sigma^2}{n}\frac{n(n+1)}{2}\stackrel{n\to\infty}{\longrightarrow}+\infty\\
+            \end{split}
+        \end{equation*}
+        so the condition 4. is not true.
+    \end{itemize}
+\end{example}
+
+\begin{exercise}
+    Suppose $(X_t)$ a stationary time series with $\expect{X_t}=0\ \forall t$ and $\lim_{h\to\infty}\gamma(h)=0$. Consider $(Y_t)$ such that $Y_t=X_t+W$, where $W$ is a random variable independent of $(X_t)$ ans such that $\expect{W}=0$ and $Var(W)=1$. Check if the time series $(Y_t)$ exhibits a long term dependence.
+\end{exercise}
+
+Let us end the lecture with some specific notion of ergodicity for Gaussian time series.
+
+\begin{theorem}
+    Consider a time series $(X_t)$ which is Gaussian and stationary. Then
+    \[
+        \lim_{h\to\infty}\gamma(h)=0\iff\mean{X}_n\stackrel{\el{2}}{\implies}\mu  
+    \]
+\end{theorem}
+
+Heuristically, a Gaussian time series is ergodic if and only if any two random variables positioned far apart in the sequence are almost independently distributed. 
+
+In conclusion, for stationary time series we do not need to observe separate independent trajectories of the time series to obtain a consistent estimation of its overall mean; a good estimation can be obtained by observing a sufficiently long trajectory of the time series.s
+
+\begin{exercise}
+    Check if the following time series has the mean-ergodic property in $\el{2}$:
+    \[
+        (X_t)\ with\ X_t=\frac{\mu}{t}+W_t\ t\in\Z-\set{0}\ and\ (W_t)\sim\mathcal{IID}(0,\sigma^2)
+    \] 
+\end{exercise}

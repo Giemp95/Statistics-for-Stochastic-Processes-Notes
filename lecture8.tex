@@ -1,0 +1,463 @@
+\section{Lecture 8}
+\label{lecture8}
+
+\begin{center}
+    \textbf{Seasonal component: fitting with a regression. Periodogram. Analysis of the remainder term. Examples, exercises and case studies in R. Linear filter, time-invariance, MA(q) t.s. Laurent series and operators: convergence a.s.}
+\end{center}
+
+A seasonal component is typically represented as a discrete fourier summation:
+\[
+    s_t=\alpha_0+\alpha_1\cos(2\pi\omega_1t)+\beta_1\sin(2\pi\omega_1t)+...+\alpha_p\cos(2\pi\omega_pt)+\beta_p\sin(2\pi\omega_pt)
+\]
+
+\begin{example}
+    A case study in R: generate a path of
+    \[
+        X_t=2\sin\left(\frac{2\pi}{50}t+0.6\pi\right)+5W_t\ \ \ W_t=\mathcal{GWN}(0,1)  
+    \]
+    and fit the periodic deterministic model underlying the time series
+    \[
+        s_t=2\sin\left(\frac{2\pi}{50}t+0.6\pi\right) \implies s_t=A\sin(2\pi\omega t+\phi)
+    \]
+    Since it is difficult to fit the data with these functions, it is more useful to reparametrize the formula as
+    \[
+        s_t=A\cos(2\pi\omega t)\sin\phi+A\sin(2\pi\omega t)\cos\phi=B_1\cos(2\pi\omega t)+B_2\sin(2\pi\omega t)
+    \]
+    \begin{verbatim}
+#################################################
+# Dealing with a periodic signal
+#################################################
+
+(omega=1/50) # the frequency
+
+(A=2) # the amplitude
+
+(phi=0.6*pi) # the phase
+
+(start.cycle = -phi/(2*pi*omega))
+# the shift of the first cycle with respect to the y-axis
+
+# to see the shift, plot the deterministic function s_t
+times=seq(start.cycle,100,1)
+wave = A*sin(2*pi*omega*times + phi)
+plot(times,wave, type='l',main='Deterministic function s_t')
+abline(v=0,col='red')
+abline(h=0,col='blue')
+abline(v=50,col='purple')
+
+# generate the GWN noise
+set.seed(154)
+w = rnorm(200,0,1)
+wave = A*sin(2*pi*omega*(1:200) + phi)
+plot((1:200),wave+5*w, type='b',main='Deterministic s_t+ 5*N(0,1)',ylab='X_t')
+abline(h=0,col='red')
+
+#estimate s_t by using B1 cos(2*pi*omega*times)+B2 sin(2*pi*omega*times)
+z1 = cos(2*pi*omega*(1:200))
+z2 = sin(2*pi*omega*(1:200))
+
+# run the linear regression
+fit <- lm(wave~z1+z2)
+
+# the coefficients of the regression
+fit$coefficients
+
+# compare with B1 and B2
+A*sin(phi);A*cos(phi);
+(coeff=fit$coefficients[2:3])
+
+#fitting the wave with the noise
+fit1 <- lm(wave+5*w~z1+z2)
+(coeff=fit1$coefficients[2:3])
+    \end{verbatim}
+\end{example}
+
+\begin{example}
+    We will try to fit the seasonal component of TEMPDUB with the same technique we have just seen.
+    \begin{verbatim}
+########################################
+# The dataset TEMPDUB
+########################################
+
+# load the library and the dataset
+library(TSA)
+data(tempdub)
+
+#plot the dataset
+plot(tempdub,type='o',ylab='temperature')
+
+# do a regression on data with sin and con functions
+timetemp=time(tempdub)
+z1 = cos(2*pi*timetemp)
+z2 = sin(2*pi*timetemp)
+fit <- lm(tempdub~z1+z2)
+
+# plot tempdub versus the regression model
+windows()
+par(mfrow=c(2,1))
+plot(tempdub,ylab='temperature',type='o',main='Data')
+is.ts(timetemp)
+timef=as.numeric(timetemp)
+plot(timef,fit$fitted.values,type='b', main='Fitting', xlab='times',
+    ylab='fitted values')
+
+# same range on the y-axis
+(tdmin=min(as.numeric(tempdub)))
+(tdmax=max(as.numeric(tempdub)))
+windows()
+par(mfrow=c(2,1))
+plot(tempdub,ylab='temperature',type='o',main='Data')
+plot(timef,fit$fitted.values,type='b', main='Fitting', xlab='times',
+    ylab='fitted values', ylim=range(tdmin,tdmax))
+
+# transform the fitting in a time series
+is.ts(fit$fitted.values)
+fit.ts=ts(fit$fitted.values,start=start(tempdub),end=end(tempdub),
+    frequency=frequency(tempdub))
+
+# a different plot
+windows()
+ts.plot(tempdub,fit.ts,col=c('red','blue'),main='Tempdub vs the fitting',
+    ylim=range(8,90))
+legend("topright", legend = c("tempdub", "fit"),
+lty = 1, col=c('red','blue'),
+title = "Line colors", cex = 1.0)
+
+# exercise: fit the seasonal component obtained using the STL procedure 
+# applied to the dataset jj
+    \end{verbatim}
+\end{example}
+
+Any time series can be expressed as a combination of sine and cosine functions with different frequencies. We can use the \textbf{periodogram} to graph a measure of the relative importance of possible frequency values that might explain the oscillation pattern of the observed data. Suppose we the series of harmonic frequencies:
+\[
+    \omega_j=\frac{j}{n}\ \ \ for j=1,2,...,\frac{n}{2}  
+\]
+we can represent this series as
+\[
+    X_t=\sum_{j=1}^{\frac{n}{2}}\left[\beta_1^{j,n}\cos(2\pi\omega_jt)+\beta_2^{j,n}\sin(2\pi\omega_jt)\right]  
+\]
+implying $n$ parameters. The first step in setting up the periodogram is estimating these parameters ($\beta_1,\beta_2$). The mathematical tool used for doing this is the fast Fourier transformations. The value of the periodogram at $\frac{j}{n}$ is
+\[
+    P\left(\frac{j}{n}\right)\approx(\beta_1^{j,n})^2+(\beta_2^{j,n})^2  
+\]
+The dominant frequencies might be used to fit cosine and sine wawes to the data or to describe the important periodicities in the series.
+
+\begin{example}
+    \begin{verbatim}
+############################################
+# Periodogram
+###########################################
+
+# first example
+# set the frequency, the amplitude, the phase
+(omega=1/50)
+(A=2)
+(phi=0.6*pi)
+
+# define the wave
+times=seq(1,100,1)
+wave = A*sin(2*pi*omega*times + phi)
+
+#load the library
+library('TSA')
+
+# run the periodogram
+out=periodogram(wave)
+
+# check harmonic frequencies (equally spaced with step=1/sample.size)
+(sample.size=length(times))
+(step=1/sample.size)
+head(out$freq,6)
+
+# where the maximum is located
+which.max(out$spec)
+
+# the related frequency
+out$freq[which.max(out$spec)]
+
+# the period
+1/out$freq[which.max(out$spec)]
+
+# second example
+#There are 6 waves over (0,100)
+x1 = 2*cos(2*pi*1:100*6/100) + 3*sin(2*pi*1:100*6/100)
+
+#There are 10 waves over (0,100)
+x2 = 4*cos(2*pi*1:100*10/100) + 5*sin(2*pi*1:100*10/100)
+
+#There are 40 waves over (0,100)
+x3 = 6*cos(2*pi*1:100*40/100) + 7*sin(2*pi*1:100*40/100)
+x = x1 + x2 + x3
+
+# run the periodogram
+out=periodogram(x)
+
+# the dominant period
+1/out$freq[which.max(out$spec)]
+
+# why?
+#frequencies
+100/6
+
+#amplitude 2
+100/10 #amplitude 10
+100/40 #amplitude 40
+
+# third example
+data(tempdub)
+plot(tempdub,ylab='temperature',type='o')
+out=periodogram(tempdub)
+
+# the increment of the harmonic frequencies
+(step=1/length(time(tempdub)))
+
+# check
+head(out$freq,6)
+
+# the period
+1/out$freq[which.max(out$spec)]
+
+# compare with the output of the frequency function
+frequency(tempdub)
+    \end{verbatim}
+\end{example}
+
+Let us make a summary of what we have seen. The techniques proposed are useful to analyze the main features of a time series, like trend and seasonal component, but the next step is to fit them with suitable deterministic functions. The last step is to recover and analyze the residuals, which is better if it is stationary (we can use transformation for doing this), and fit it with a classical theoretical model.
+
+\begin{example}
+    \begin{verbatim}
+###################################################
+# Analysis of the reminder term for the dataset jj
+###################################################
+
+#load the library and the dataset
+library(astsa)
+data(jj)
+
+# ask for the decomposition in additive model of the log(jj)
+comp=stl(log(jj),'per')
+
+#select the residuals
+residualjj=comp$time.series[,3]
+
+# do a plot around the zero level
+plot(residualjj,type='b',main='Residuals of the additive model',ylab='residuals')
+abline(h=0,col='red')
+
+# Are the residuals observations of a gaussian ts?
+# produce a qqnorm of the residuals
+qqnorm(residualjj,col='blue',main='QQplot residuals')
+qqline(residualjj,col='red')
+
+# create an histogram with a kernel stimator
+hist(residualjj,prob=TRUE,12,main='Histogram residuals')
+lines(density(residualjj),col='red')
+
+# ACF of residualjj
+acf(residualjj,60)
+
+# Box.test: H0: the ts is aymptotically uncorrelated
+# pag.310 in Time series: theory and methods, Brockwell and Davis
+library(tseries)
+Box.test(residualjj,type=c('Ljung-Box'))
+
+# for testing normality: skewness and kurtosis
+install.packages(moments)
+library(moments)
+skewness(residualjj)
+kurtosis(residualjj)
+
+# do the jarque.bera test--> H0: data from a normal distribution
+jarque.bera.test(residualjj)
+
+# The KPSS test
+# H0: the contribution of the random walk is zero
+kpss.test(residualjj)
+    \end{verbatim}
+\end{example}
+
+The \textbf{KPSS test} is used to test the null hypothesis that time series observations result to be stationary around a deterministic trend (i.e. trend-stationary). The model is
+\[
+    X_t=deterministic\ trend+random\ walk+stationary\ noise  
+\]
+where the random walk has a zero drift. The null hypothesis of the test is $H_0$: the variance of the random walk is zero.
+
+The stochastic model we employ is based on the idea that observations of a time series $X_t$ in which successive values are highly dependent can be frequently regarded as generated by a sequence of uncorrelated shocks. These shocks are randomly drawn from a fixed distribution usually assumed to be white noise. So the white noise is supposed to transform to a sequence $X_t$ by a linear filter.
+
+\begin{definition}
+    A \textbf{linear filter} $\mathcal{L}:\mathcal{E}\mapsto\mathcal{E}$ ($\mathcal{E}$ is the set of all time series) such that $\forall \alpha_1,\alpha_2\in\R$ and $\forall(W_{t,1}),(W_{t,2}\in\mathcal{E})$:
+    \[
+        \lf{\alpha_1(W_{t,1})+ \alpha_2(W_{t,2})}=\alpha_1\lf{(W_{t,1})}+\alpha_2\lf{(W_{t,2})}  
+    \]
+\end{definition}
+
+\begin{example}
+    Consider:
+    \begin{itemize}
+        \item $\lf{(W_t)}=(3W_t)$: this is a linear filter
+        \item $\lf{(W_t)}=(W_t^2)$: this is not a linear filter
+        \item $X_t-2X_{t-1}+3X_{t-2}=4W_t+5W_{t-1}$: this is a linear filter
+    \end{itemize}
+\end{example}
+
+\begin{example}
+    Consider $(X_t)=\lf{(W_t)}$ such that
+    \[
+        X_t=\sum_{j\in I_t}\psi_{t,j}W_j  
+    \]
+    where $I_t\subset\Z$ and $\abs{I_t}<\infty$. $\psi_{t,j}$ are the weights. This linear filter is a special case of two sided moving average filter:
+    \[
+        \psi_{t,j}=\frac{1}{2k+1},\ j\in I_t\ \ \ and\ \ \ I_t=\set{-k,...,k}\subseteq\Z
+    \]  
+\end{example}
+
+\begin{definition}
+    A linear filter is \textbf{time invariant} if dealying the input of any constant step n delays the output of the same constant step n:
+    \[
+        \lf{(W_{t-n})}=(X_{t-n})  
+    \]
+    $\forall n\in\N$ and $W_{t-n}=B^nW_t,\ X_{t-n}=B^nX_t$ with $B$ backshift operator.
+\end{definition}
+
+\begin{example}
+    Consider the linear filter
+    \[
+        \lf{(W_t)}=(X_t)  
+    \]
+    with $X_t=\nabla W_t$. Is this filter time invariant? Let us check the linear property:
+    \begin{equation*}
+        \begin{split}
+            \nabla(\alpha_1W_{t,1}+\alpha_2W_{t,2})&=(\alpha_1W_{t,1}+\alpha_2W_{t,2})-(\alpha_1W_{t-1,1}+\alpha_2W_{t-1,2})\\
+            &=\alpha_1\nabla W_{t,1}+\alpha_2\nabla W_{t,2}\\
+            \lf{\alpha_1(W_{t,1})+\alpha_2(W_{t,2})}&=(\nabla(\alpha_1W_{t,1}+\alpha_2W_{t,2}))\\
+            &=(\alpha_1\nabla W_{t,1}+\alpha_2\nabla W_{t,2})\\
+            &=\alpha_1(\nabla W_{t,1})+\alpha_2(\nabla W_{t,2})\\
+            &=\alpha_1\lf{(W_{t,1})}+\alpha_2\lf{(W_{t,2})}\\
+        \end{split}
+    \end{equation*}
+    Confirming the linearity of the filter. Observe that
+    \[
+        \nabla(B^nW_t)=(1-B)B^nW_t=(B^n-B^{n-1})W_t=B^n(1-B)W_t=B^n\nabla W_t
+    \]
+    Then:
+    \[
+        \lf{(W_{t-n})}=(\nabla B^nW_t)=(B^n\nabla W_t)=(X_{t-n})  
+    \]
+\end{example}
+
+\begin{exercise}
+    Check if $\lf{(W_t)}=(aW_{-t}),\ a\in\R$ is a time invariant linear filter.
+\end{exercise}
+
+\begin{proposition}
+    If $\psi(z)=\sum_{j=-k}^k\psi_jz^j,\ \set{\psi_j}\in\R$ then
+    \[
+        \lf{(W_t)}=(X_t)  
+    \]
+    with $X_t=\psi(B)W_t$, is a time invariant time series.
+\end{proposition}
+
+\begin{remark}
+    $\psi(z)$ is a Laurent polynomial.
+\end{remark}
+
+\begin{proof}
+    We have that
+    \[
+        X_t=\psi(B)W_t=\sum_{j=-k}^k\psi_jB^jW_t=\sum_{j=-k}^k\psi_jW_{t-j}
+    \]
+    Observe that: 
+    \begin{equation*}
+        \begin{split}
+            \psi(B)B^n&=B^n\psi(B)\\
+            \psi(B)B^nW_t&=B^n\psi(B)W_t\\
+        \end{split}
+    \end{equation*}
+    Then
+    \[
+        \lf{(W_{t-n})}=(\psi(B)W_{t-n})=(\psi(B)B^nW_t)=(B^n\psi(B)W_t)=(X_{t-n})  
+    \]
+\end{proof}
+
+\begin{definition}
+    One more example of this class of time invariant linear filter is the \textbf{moving average of order $q\in\N$}. In this case $(W_t)\sim\mathcal{WN}(0,\sigma^2)$, $k=q$ and
+    \[
+        \phi_j=\begin{cases}
+            0&j<0\\
+            1&j=0\\
+            \phi_j&j=1,2,...,q\\
+        \end{cases}  
+    \]
+    implying that
+    \[
+        \psi(z)=1+\phi_1z+...+\phi_1z^q=\phi(z)  
+    \]
+    Therefore $\lf{(W_t)}=(X_t)$ with:
+    \[
+        X_t=\phi(B)W_t=W_t+\phi_1W_{t-1}+...+\phi_qW_{t-q}
+    \]
+    $\forall t\in\Z$.
+    The moving average of order q is a weighted linear combination of the present value $W_t$ and its $q$ past values. 
+\end{definition}
+
+Now we will try to give meaning to the operator
+\[
+    \phi(B)=\sum_{j\in\Z}\psi_jB^j  
+\]
+Consider
+\[
+    \tilde{X}_{t,n}=\sum_{j=-n}^n\psi_jW_{t-j}
+\]
+with $t\in\Z, n\in\N\implies(\tilde{X}_{t,n})_{n,t\in\N}$ random variables. What happends when $n\to\infty$?
+\begin{lemma}
+    If $(X_k)\in(\mean{\R}, \mathcal{B}(\mean{\R}))$ then
+    \begin{enumerate}
+        \item $\expect{\sum_k\abs{X_k}}=\sum_k\expect{\abs{X_k}}$
+        \item If $\sum_k\expect{\abs{X_k}}<\infty$ then
+            \begin{enumerate}
+            \item $\sum_k\abs{X_k}\implies\prob{\set{\omega\in\Omega/\sum_k\abs{X_t(\omega)}<\infty}}=1$
+            \item $\exists\lim_nS_n$ almost surely with $S_n$ the n-th partial sum of $\sum_kX_t$
+            \item $\expect{\sum_kX_k}=\sum_k\expect{X_t}$
+        \end{enumerate}
+    \end{enumerate} 
+\end{lemma}
+
+\begin{theorem}
+    \label{theorem}
+        Suppose $\set{\psi_j}_{j\in\Z}\in\R$ and $(W_t)$ such that $\sup_{t\in\Z}\expect{\abs{W_t}}<\infty$, then
+        \[
+            \tilde{X}_{t,n}\stackrel{a.s.}{\implies}X_t\ \ \ \forall t\in\Z  
+        \]
+        implying that $X_t=\sum_{j=\Z}\psi_jW_{t-j}$.
+\end{theorem}
+
+\begin{corollary}
+    \label{corollary}
+    \[
+        \prob{\set{\omega\in\Omega/\sum_{j\in\Z}\abs{\phi_j}\abs{W_{t-j}(\omega)}<\infty}}=1  
+    \]
+\end{corollary}
+
+\begin{proof}
+    To prove that $\exists\lim_n\tilde{X}_{t,n}$ we have to prove
+    \[
+        \sum_{j\in\Z}\expect{\abs{\phi_jW_{t-j}}}<\infty\ \ \ \forall t\in\Z  
+    \]
+    Fix $t\in\Z$ and $M=\sup_{t\in\Z}\expect{\abs{W_t}}$:
+    \begin{equation*}
+        \begin{split}
+            \sum_{j\in\Z}\expect{\abs{\phi_jW_{t-j}}}&=\lim_n\sum_{j=-n}^n\expect{\abs{\phi_jW_{t-j}}}\\
+            &=\lim_n\sum_{j=-n}^n\abs{\phi_j}\expect{\abs{W_{t-j}}}\\
+            &<M\lim_n\sum_{j=-n}^n\abs{\phi_j}<\infty
+        \end{split}
+    \end{equation*}
+    proving theorem \ref{theorem}. Now we will prove corollary \ref{corollary}.\\
+    If $S$ is a positive random variable $\expect{S}<\infty\implies\prob{S=+\infty}=0$. From the lemma we have that
+    \begin{equation*}
+        \begin{split}
+            \expect{\sum_{j\in\Z}\abs{\phi_j}\abs{W_{t-j}}}=\sum_{j\in\Z}\abs{\phi_j}\expect{\abs{W_{t-j}}}<\infty\\
+            \prob{\set{\omega\in\Omega/\sum_{j\in\Z}\abs{\phi_j}\abs{W_{t-j}(\omega)}=+\infty}}=0\\
+            \prob{\set{\omega\in\Omega/\sum{j\in\Z}\abs{\phi_j}\abs{W_{t-j}(\omega)}<\infty}}=1
+        \end{split}
+    \end{equation*}
+\end{proof}

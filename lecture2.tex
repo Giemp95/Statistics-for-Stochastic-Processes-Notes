@@ -1,0 +1,476 @@
+\section{Lecture 2}
+\label{lecture2}
+
+\begin{center}
+    \textbf{Gaussian time series. Mean, variance, autocovariance, autocorrelation. Examples: random walk, periodic signals. Properties of autocovariance functions.}
+\end{center}
+
+The Gaussian model is the first that a data scientist typically tries when he thinks that the observation result from a superposition of many factors, occurring independently from each other, at least asymptotically. The Central Limit Theorem justifies this assumption.
+
+To work with \textbf{Gaussian time series}, we have to recall the notion of \textbf{multivariate Gaussian distribution}.
+\begin{definition}
+    The \textbf{bivariate Gaussian distribution} joint pdf is defined as:
+    \begin{multline*}
+        f(x,y) = \frac{1}{2\pi\sigma_X\sigma_Y\sqrt{1-\rho^2}}\\\exp\left\{-\frac{1}{2(1-\rho^2)}\left[\frac{(x-\mu_X)^2}{\sigma^2_X}+\frac{(y-\mu_Y)^2}{\sigma^2_Y}-\frac{2\rho(x-\mu_X)(y-\mu_Y)}{\sigma_X\sigma_Y}\right]\right\}
+    \end{multline*}
+    where $\expect{X}=\mu_X$, $\expect{Y}=\mu_Y$, $D[X]=\sigma_X$, $D[Y]=\sigma_Y$ and $\rho=\frac{\expect{[X-\mu_x][Y-\mu_Y]}}{\sigma_X\sigma_Y}$ is the correlation coefficient.
+    It is clear that this distribution is completely specified by the means vector and the covariance matrix:
+    \begin{equation*}
+        \boldsymbol{\mu}^\intercal=
+        \begin{pmatrix}
+            \mu_X\\
+            \mu_Y
+        \end{pmatrix}
+        , 
+        \boldsymbol{\Sigma}=
+        \begin{pmatrix}
+            \sigma^2_X & \rho\sigma_X\sigma_Y\\
+            \rho\sigma_X\sigma_Y & \sigma^2_Y
+        \end{pmatrix}
+        =
+        \begin{pmatrix}
+            \sigma^2_X & cov(X, Y)\\
+            cov(X, Y) & \sigma^2_Y
+        \end{pmatrix}
+    \end{equation*}
+    allowing us to write the same formula but in matrix notation:
+    \begin{equation*}
+        f(\boldsymbol{x})=\frac{1}{2\pi\sqrt{det(\boldsymbol{\Sigma})}}\exp\left\{\frac{1}{2}(\boldsymbol{x}-\boldsymbol{\mu})\boldsymbol{\Sigma}^{-1}(\boldsymbol{x}-\boldsymbol{\mu})^\intercal\right\}
+    \end{equation*}
+    Using this generalisation it is straight-forward to generalise the expression to an $n>2$ random Gaussian vector:
+    \begin{equation*}
+        f(\boldsymbol{x})=\frac{1}{(2\pi)^{n/2}\sqrt{det(\boldsymbol{\Sigma})}}\exp\left\{\frac{1}{2}(\boldsymbol{x}-\boldsymbol{\mu})\boldsymbol{\Sigma}^{-1}(\boldsymbol{x}-\boldsymbol{\mu})^\intercal\right\}
+    \end{equation*}
+\end{definition}
+\noindent{The marginal and conditional distributions of a multivariate Gaussian distribution are still Gaussian. Remember also that this family distribution is closed under linear transformations. Before introducing the notion of Gaussian time series, we need to recall few more notions:}
+
+\begin{definition}
+    $\boldsymbol{z}=(Z_1, ...,Z_m)$ is a $m$-dimensional standard Gaussian random vector iif $Z_1, ...,Z_m$ are iid random variables $\sim\mathcal{N}(0, \sigma^2)$.
+    Let us consider another standard Gaussian random vector $\boldsymbol{x}=(X_1, ...,X_n)$. Then there exists a $\boldsymbol{b}\in\mathcal{R}^n$ and a $\boldsymbol{A}\in\mathcal{R}^{n\times m}$ such that:
+    \[
+        \boldsymbol{x}=\boldsymbol{A}\boldsymbol{Z}^\intercal+\boldsymbol{b}^\intercal
+    \]
+    We than have that:
+    \begin{equation*}
+        \boldsymbol{\mu}=\expect{\boldsymbol{x}}=\boldsymbol{b} \text{ and } \boldsymbol{\Sigma}=\expect{\boldsymbol{x}^\intercal -\boldsymbol{b}^\intercal)(\boldsymbol{x}-\boldsymbol{b})}=\boldsymbol{A}\boldsymbol{A}^\intercal\in\R^{n\times n}       
+    \end{equation*}
+    We can note a multivariate Gaussian distribution in matrix notation as:
+    \[
+        \boldsymbol{x}\sim\mathcal{N}(\boldsymbol{\mu},\boldsymbol{\Sigma})    
+    \]
+\end{definition}
+
+Remind that:
+\begin{definition}
+    A matrix is non-singular when:
+    \[
+        det(\boldsymbol{\Sigma})>0 
+    \]
+    This condition is equivalent to say that the inverse matrix exists ($\boldsymbol{\Sigma}^{-1}\in\R^{n\times n}$) or that the $\boldsymbol{\Sigma}$ is positive definite ($\boldsymbol{\Sigma}>0 \Rightarrow \boldsymbol{x}\boldsymbol{\Sigma}\boldsymbol{x}^\intercal>0 \text{ } \forall \boldsymbol{x}\in\R^n$).
+    
+    If $det(\boldsymbol{\Sigma})\ge0$ then the matrix is said to be non negative definite.
+\end{definition}
+
+\begin{definition}
+    A multivariate Gaussian distribution is said to be singular when:
+    \[
+        det(\boldsymbol{\Sigma})=0 
+    \]
+    In such a case the possible value of the vector $\boldsymbol{x}$ are contrained to lie in a subspace of $\R$ with dimension equal to the rank of $\boldsymbol{\Sigma}$, that is:
+    \[
+        rank(\boldsymbol{\Sigma})=k<n \Rightarrow\exists\boldsymbol{C}\in\R^{n\times k} | \boldsymbol{x}=\boldsymbol{C}\boldsymbol{z}^\intercal +\boldsymbol{b}^\intercal  
+    \]
+    with $\boldsymbol{z}\in\mathcal{N}(0,\boldsymbol{I}_k)$.
+\end{definition}
+
+We are now ready to define Gaussian time series.
+\begin{definition}
+    A time series $(X_t)_{t\in\Z}$ is said to be a \textbf{Gaussian time series} iif 
+    \[
+        \forall n\in\N, \text{ }\forall t_1, ..., t_n\in\Z
+    \]
+    there exists
+    \[
+        \boldsymbol{b}_{(t_1, ...,t_n)}\in\R^n, \text{ }\boldsymbol{\Sigma}_{(t_1, ...,t_n)}\ge0   
+    \]
+    such that
+    \[
+        \boldsymbol{X}_{(t_1, ...,t_n)}\equiv(X_{t_1}, ..., X_{t_n})\sim\mathcal{N}(\boldsymbol{b}, \boldsymbol{\Sigma}_{(t_1, ...,t_n)})
+    \]
+    That is, the random vector of observation is distributed according to a multivariate Gaussian distribution.
+\end{definition}
+
+One more tool that we will use with Gaussian time series is the \textbf{characteristic function}, which in this case is defined as:
+\[
+    \Phi(\boldsymbol{z}) \equiv \expect{e^{i\boldsymbol{z}\boldsymbol{x}^\intercal_{(t_1, ...,t_n)}}} = \exp{\left\{i\boldsymbol{z}\boldsymbol{b}^\intercal_{(t_1, ...,t_n)}-\frac{1}{2}\boldsymbol{z}\boldsymbol{\Sigma}_{(t_1, ...,t_n)}\boldsymbol{z}^\intercal\right\}}
+\]
+
+Now we will introduce the \textbf{special functions} of time series. We assume that $(X_t)_{t\in\Z}\in\el{2}$, meaning that all the observede variables have finite second moment ($\expect{^2_t}<\infty, \forall t\in\Z$).
+\begin{definition}
+    The \textbf{mean} of a time series is defined as
+    \[
+        \mu_t=\expect{X_t} \text{, } t\in\Z  
+    \]
+\end{definition}
+\begin{definition}
+    The \textbf{Auto Covariance Function (ACF)} of a time series is defined as
+    \[
+        \gamma(s,t)\equiv cov(X_s,X_t)=\expect{(X_t-\mu_t)(X_s-\mu_s)} \text{, } t,s\in\Z
+    \]
+    Observe that $\gamma:\Z\times\Z\mapsto\R$. 
+\end{definition}
+\begin{definition} \label{ACF}
+    The \textbf{Auto Correlation Function (ACF)} of a time series is defined as
+    \[
+        \rho(s,t)\equiv \frac{\gamma{s,t}}{\sqrt{\gamma(s,s)\gamma(t,t)}} \text{, } t,s\in\Z
+    \]
+    Observe that
+    \[
+        \gamma(s,s)=cov(X_s,X_s)=\expect{(X_s-\mu_s)^2}=Var(X_s)
+    \]
+    making it possible to rewrite the previous definition as
+    \[
+        \rho(s,t)\equiv \frac{\gamma{s,t}}{\sqrt{Var(X_s)Var(X_t)}} \text{, } t,s\in\Z
+    \]
+\end{definition}
+\begin{lemma}
+    $\rho(s,t)\in[-1,1] \text{, } t,s\in\Z$
+\end{lemma}
+\begin{proof}
+    we will use the Cauchy-Schwart's inequality:
+    \[
+        \expect{XY} \le \expect{\abs{XY}} \le \sqrt{\expect{X^2}}\sqrt{\expect{Y^2}}
+    \]
+    Squaring both external sides:
+    \[
+        \expect{XY}^2 \le \expect{X^2}\expect{Y^2}
+    \]
+    Now replace $X=X_t-\mu_t$ and $Y=X_s-\mu_s$:
+    \[
+        \expect{(X_t-\mu_t)(X_s-\mu_s)}^2 \le \expect{(X_t-\mu_t)^2}\expect{(X_s-\mu_s)^2}
+    \]
+    Remembering definition \ref{ACF}:
+    \begin{equation*}
+        \begin{split}
+            \expect{(X_t-\mu_t)(X_s-\mu_s)}^2 &\le Var(X_t)Var(X_s)\\
+            \left(\frac{\expect{(X_t-\mu_t)(X_s-\mu_s)}}{\sqrt{Var(X_t)Var(X_s)}}\right)^2 &\le 1\\
+            \rho(s,t)^2 &\le 1 \qedhere
+        \end{split}
+    \end{equation*}
+\end{proof}
+\begin{remark}
+    If $\rho(s,t)=\pm 1$ then there is a \textbf{strong linear dependence} between $X_t$ and $X_s$, that it
+    \[
+        \prob{X_t=aX_s+b}=1           
+    \]
+\end{remark}
+
+\begin{definition}
+    A time series $(X_t)_{t\in\Z}$ is called \textbf{stationary} if:
+    \begin{itemize}
+        \item $X_t\in\mathbb{L}^2\ \forall t\in\Z$
+        \item $\mu_t=\mu\ \forall t\in\Z$
+        \item $\gamma(s,t)=\gamma(0,t-s)\ \forall t\in\Z$ (this is also notated as $\gamma(h)$, assuming the \textbf{lag window} $h=t-s$)
+    \end{itemize}
+\end{definition}
+\begin{corollary}
+    If $(X_t)_{t\in\Z}$ is stationary then $Var(X_t)$ is constant $\forall t\in\Z$.
+\end{corollary}
+\begin{proof}
+    Observe that $\gamma(t,t)=Var(X_t)=\gamma(0,t-t)=\gamma(0)= const \ge 0$.
+\end{proof}
+What about the correlation function? In this case we have:
+\[
+    \rho(h)=\frac{\gamma(h)}{\sqrt{\gamma(0)\gamma(0)}}=\frac{\gamma(h)}{\gamma(0)} 
+\]
+
+A less powerful property if the \textbf{weak stationarity}: a weak stationary time series can be stationary in \textit{mean} is it has a constant mean or stationary in \textit{variance} is the variance is constant.
+
+\begin{example}
+    Now we will see a classical example of non-stationary time series, the random walk. Consider $X_t=\mu+X_{t-1}+W_t$ for $t=1,2,...$ where:
+    \begin{itemize}
+        \item $\mu>0$
+        \item $(W_t)_{t\in{1,2,...}}\ iid$ with $\expect{W_t}=0,\ \expect{W_t^2}=\sigma^2$
+        \item $\prob{X_0=0}=1$
+    \end{itemize}
+    Is $X_t$ stationary?
+    First of all, let's prove that $X_t=\mu t+X_0+\sum_{j=1}^n W_j$. This is true for $t=1$ since $X_1=\mu+X_0+W_1$. Proceeding by induction, we assume that the expression is true for an arbitrary $t=s$, obtaining:
+    \begin{equation*}
+        \begin{split}
+            X_{s+1}&=\mu+X_s+W_{s+1}\ \ \ X_s=s\mu+X_0+\sum_{j=1}^sW_j\\
+            &=(s+1)\mu+X_0+\sum_{j=1}^{s+1}W_j\\
+        \end{split}
+    \end{equation*}
+    This is useful beacuse we can now demonstrate that $\prob{X_0=0}=1 \implies \expect{X_0}=0$:
+    \begin{equation*}
+        \begin{split}
+            \expect{X_t}=\mu t+\expect{X_0}+\sum_{j=1}^{s+1}\expect{W_j}=\mu t\ \ \ t=0,1,2
+        \end{split}
+    \end{equation*}
+    Then, since the mean is not constant, the time series is not stationary.
+\end{example}
+
+\begin{exercise}
+    Prove that $\gamma(s,t)=\sigma^2min\{s,t\}$ for $s,t=1,2,...$.
+\end{exercise}
+
+Now we will study some examples of periodic signals.
+
+\begin{example}
+    Assume
+    \[
+        X_t=R\sin(2\pi\omega t+\phi)+W_t\ \ \ t\in\Z    
+    \]
+    where
+    \begin{itemize}
+        \item $(W_t)_{t\in\Z}\ iid\ \sim\mathcal{N}(0,\sigma^2)$
+        \item $R>0$ 
+    \end{itemize}
+    In the context of periodic signal all these constants have special meaning; $R$ is the \textbf{amplitude}, $\omega$ is the \textbf{frequency}, $\phi$ is the \textbf{phase shift} and $p=\frac{1}{\omega}$ is the \textbf{period}. Suppose $R=1$, $\phi=0$ and $p=2\pi$ (so $\omega=\frac{1}{2}\pi$). Then we obtain:
+    \[
+        X_t=R\sin t+W_t
+    \]
+    The shift of the wave with respect to the crossing of the y-axis is given by $-\frac{\phi}{2\pi\omega}$. To better understand this, consider the following examples:
+    \[
+        2\sin\left(2\pi\frac{4}{2\pi}t-2\right)  
+    \]
+    In this case, $R=2$, $p=\frac{\pi}{2}$ and $-\frac{\phi}{2\pi\omega}=\frac{1}{2}$. This mean that the beginning of the curve in this case is shifted toward left by $\frac{1}{2}$. In general:
+    \begin{itemize}
+        \item $\phi>0$ implies a shift to the left;
+        \item $\phi<0$ implies a shift to the right;
+    \end{itemize}
+    Now the question is: $X_t$ is stationary? Well, start by observing that $X_t\in\el{2}$ since $W_t\in\el{2}$ and that $\expect{X_t}=R\sin(2\pi\omega t+\phi)$. Specifically, this last term results in a non-constant $\mu_t$, implying that $X_t$ is not stationary. As an exercise we further calculate 
+    \[
+        \gamma(s,t)=\expect{(X_t-\mu_t)(X_s-\mu_s)}=\expect{W_tW_s}=
+        \begin{cases}
+            0 & s\ne t\\
+            \sigma^2 & s=t
+        \end{cases}  
+    \]
+\end{example}
+
+\begin{example}
+    \label{example3}
+    Consider:
+    \[
+        X_t=R\cos(2\pi\omega t+\phi)\ \ \ t\in\Z    
+    \]
+    with:
+    \begin{itemize}
+        \item $R\in\el{2}$
+        \item $\phi\sim\mathcal{U}(-\pi,\pi) \implies f_\phi(\theta)=\begin{cases} \frac{1}{2\pi} & \theta\in[-\pi,\pi]\\ 0 & \theta\notin[-\pi,\pi] \end{cases}$
+        \item $R\perp\phi$
+    \end{itemize}
+    Again, the question is: is $X_t$ stationary? First, observe that $X_t\in\el{2}$ since $R,\phi\in\el{2}$. Let us now compute the mean of $X_t$:
+    \[
+        \expect{X_t}=\expect{R}\expect{\cos(2\pi\omega t+\phi)}    
+    \]
+    Since the two terms of this equation are independent, let su compute the value of the second one:
+    \[
+        \expect{\cos(2\pi\omega t+\phi)}=\int_{-\pi}^{\pi}\cos(2\pi\omega t+\theta)\frac{1}{2\pi}d\theta=0   
+    \]
+    This proves that:
+    \[
+        \expect{X_t}=\mu_t=0\ \ \ \forall t\in\Z  
+    \]
+    Now let us compute the covariance function:
+    \begin{equation*}
+        \begin{split}
+            \gamma(t,s)&=\gamma(t,t+h)\\
+            &=\expect{(X_t-\mu_t)(X_{t+h}-\mu_{t+h})}\\
+            &=\expect{X_tX_{t+h}}\\
+            &=\expect{R^2\cos(2\pi\omega t+\phi)\cos(2\pi\omega t+2\pi\omega h+\phi)}\\
+            &=\expect{R^2\cos(\alpha)\cos(\alpha+\beta)}\ \ \ \alpha=2\pi\omega t+\phi,\ \beta=2\pi\omega h\\
+            &=\expect{R^2\frac{1}{2}[\cos(2\alpha+\beta)+\cos\beta]}\\
+            &=\expect{\frac{R^2}{2}[\cos(2\pi\omega h)+\cos(2(2\pi\omega t+\phi)+2\pi\omega h)]}\\
+            &=\expect{\frac{R^2}{2}}\left\{\cos(2\pi\omega h)+\expect{\cos[2\pi\omega(2t+h)+2\phi]}\right\}\\
+            &=\expect{\frac{R^2}{2}}\cos(2\pi\omega h)    
+        \end{split} 
+    \end{equation*}
+    Proving $X_t$ stationary.
+\end{example}
+
+\begin{example}
+    \label{example4}
+    Consider
+    \[
+        X_t=A\cos(2\pi\omega t)+B\sin(2\pi\omega t)\ \ \ t\in\Z
+    \]
+    Assume that:
+    \begin{itemize}
+        \item $\expect{A}=\expect{B}=0$
+        \item $\expect{A^2}=\expect{B^2}=\sigma^2$
+        \item $A\perp B \implies \expect{AB]}=0$
+    \end{itemize}
+    Is $X_t$ stationary? Start by observing that $X_t\in\el{2}$ since $A,B\in\el{2}$ and that $\expect{X_t}=0\ \forall t\in\Z$. Now let us compute the covariance function:
+    \begin{equation*}
+        \begin{split}
+            \gamma(t,t+h)&=\expect{\{A\cos(2\pi\omega t)+B\sin(2\pi\omega t)\}\{A\cos(2\pi\omega(t+h))+B\sin(2\pi\omega(t+h))\}}\\
+            &=\expect{A^2}\cos(2\pi\omega t)\cos(2\pi\omega(t+h))+\expect{B^2}\sin(2\pi\omega t)\sin(2\pi\omega(t+h))\\
+            &=\sigma^2[[A^2]\cos(2\pi\omega t)\cos(2\pi\omega(t+h))+\sin(2\pi\omega t)\sin(2\pi\omega(t+h))]\\
+            &=\sigma^2(\cos\beta\cos\alpha+\sin\beta\sin\alpha)\\
+            &=\sigma^2\cos(\alpha-\beta)\\
+            &=\sigma^2\cos[2\pi\omega(t+h)-2\pi\omega t]\\
+            &=\sigma^2\cos2\pi\omega h
+        \end{split} 
+    \end{equation*}
+    Since $\gamma$ depends only on $h$, the time series is stationary.
+\end{example}
+
+\begin{remark}
+    Consider example \ref{example3} vs example \ref{example4}. They have the same $\expect{X_t}=0$ and the same $\gamma(t,t+h)=const$, so are they equal? This is true only when $A=R\cos\phi$ and $B=-R\sin\phi$. Check the hypotesis on $A$ and $B$:
+    \begin{multline*}
+        \expect{A}=\expect{R\cos\phi}=\expect{R}\expect{\cos\phi]}\expect{R}\frac{1}{2\pi}\int_{-\pi}^\pi\cos\theta d\theta=0\\
+        \expect{B}=\expect{R}\expect{\sin\phi}=0\\
+        cov(A,B)=\expect{AB}=\expect{-R^2\cos\phi\sin\phi}=-\frac{1}{2}\expect{R^2}\expect{\sin2\phi}=0\\
+        \expect{A^2}=\expect{R^2}\mathbb{\sin^2\phi}=\expect{R^2}\frac{1}{2\pi}\int_{-\pi}^\pi\sin^2\theta d\theta=\\\expect{R^2}\left[\frac{1}{2\pi}\int_{-pi}^\pi\frac{1}{2}d\theta-\frac{1}{4\pi}\int_{-\pi}^\pi\cos(2\theta)d\theta\right]=\frac{1}{2}\expect{R^2}=\sigma^2 \text{ in \ref{example4}}
+    \end{multline*}
+\end{remark}
+
+\begin{exercise}
+    State if the following time series $(X_t)_{t\in\Z}$ are stationary:
+    \begin{itemize}
+        \item $X_t=Z\ \ \ \forall t\in\Z\ \ \ \expect{Z}=0\ \ \ \expect{Z^2}=1$
+        \item $X_t=(-1)^tZ\ \ \ \forall t\in\Z\ \ \ \expect{Z}=0\ \ \ \expect{Z^2}=1$
+    \end{itemize}
+\end{exercise}
+
+Now we will see some properties of the covariance function when the time series is stationary.
+\begin{theorem}
+    Consider $(X_t)_{t\in\Z}$ stationary. Then we have that:
+    \begin{enumerate}
+        \item $\gamma(0)\ge0$
+        \item $\gamma(h)=\gamma(-h)\ \ \ \forall h\in\Z$
+        \item $\abs{\gamma(h)}\le\gamma(0)\ \ \ \forall h\in\Z$
+    \end{enumerate}
+\end{theorem}
+\begin{proof}
+    \text{}
+    \begin{enumerate}
+        \item $\gamma(0)=cov(X-t,X_t)=Var(X_t)\ge0\ \ \ \forall t\in\Z$
+        \item $\gamma(s,t)=\gamma(t,s) \implies \gamma(0,s-t)=\gamma(0,t-s) \implies \gamma(\pm h)=\gamma(\mp h)$
+        \item $\abs{\rho(h)}\le1 \Leftrightarrow \abs{\gamma(s,t)}\le\sqrt{Var(X_t)Var(X_s)}=\gamma(0) \implies \abs{\gamma(h)}\le\gamma(0)$
+    \end{enumerate}
+\end{proof}
+
+Of course, all these properties are mirrored by the correlation function (always on stationary time series):
+
+\begin{corollary}
+    Consider $(X_t)_{t\in\Z}$ stationary. Then we have that:
+    \begin{itemize}
+        \item $\rho(0)=1$
+        \item $\rho(h)=\rho(-h)\ \ \ \forall h\in\Z$
+        \item $\abs{\rho(h)}\le1\ \ \ \forall h\in\Z$
+    \end{itemize}
+    Note that in this case we know the value of the correlation function in 0.
+\end{corollary}
+
+\begin{exercise}
+    State if $(X_t)_{t\in\Z}$ is stationary:
+    \[
+        X_t=\frac{1}{3}(W_{t-1}+W_t+W_{t+1})\ \ \ \forall t\in\Z  
+    \]
+    where $(W_t)_{t\in\Z}$ are iid and $\expect{W_t}=0$ and $\expect{W_t^2}=\sigma^2$ $\forall t\in\Z$.
+\end{exercise}
+
+One more property of a stationary time series is to have a covariance function which is a non-negative definite function. Let us first define a non-negative definite function:
+\begin{definition}
+    A function $R:\Z\mapsto\R$ is said to be \textbf{non-negative definite} iif:
+    \[
+        \sum_{i=1}^{n}\sum_{j=1}^{n}a_iR(t_i-t_j)a_j\ge0  
+    \]
+    $\forall n\in\N,\forall\boldsymbol{a}=(a_1,...,a_n)\in\R^n,\forall\boldsymbol{t}=(t_1,...,t_n)\in\Z^n$.
+\end{definition}
+
+\begin{theorem}
+    \label{t:acf}
+    Consider $\gamma:\Z\mapsto\R$ be an ACF of a stationary time series. Then:
+    \begin{enumerate}
+        \item $\gamma(h)=\gamma(-h)\ \ \ \forall h\in\Z$
+        \item $\gamma()$ is non-negative definite
+    \end{enumerate}
+\end{theorem}
+
+\begin{proof}
+    Let us start from the $\Longrightarrow$: $\gamma()$ is an ACF of a stationary time series, implying that \textit{1.} is true. Now we have to prove that $\gamma$ is non-negative definite.
+    Consider $\boldsymbol{X}_{\boldsymbol{t}}^{(n)}=(X_{t_1-\mu},...,X_{t_n-\mu})$ with $\mu=\expect{X_t}$. Observe that $\expect{\boldsymbol{X}_{\boldsymbol{t}}^{(n)}}=0$. Consider now a vector $\boldsymbol{a}\in\R^n$:
+    \begin{equation*}
+        \begin{split}
+            Var(\boldsymbol{a}\boldsymbol{X}_{\boldsymbol{t}}^{(n)\intercal})&=\expect{\boldsymbol{a}\boldsymbol{X}_{\boldsymbol{t}}^{(n)\intercal}\boldsymbol{a}\boldsymbol{X}_{\boldsymbol{t}}^{(n)\intercal}}\\
+            &=\expect{\boldsymbol{a}\boldsymbol{X}_{\boldsymbol{t}}^{(n)\intercal}\sum_{i=1}^na_i(X_{t_i}-\mu)}\\
+            &=\expect{\boldsymbol{a}\boldsymbol{X}_{\boldsymbol{t}}^{(n)\intercal}\boldsymbol{X}_{\boldsymbol{t}}^{(n)}\boldsymbol{a}^\intercal}\\
+            &=\sum_{i=1}^n\sum_{j=1}^na_i\expect{(X_{t_1}-\mu)(X_{t_j}-\mu)}a_j\\
+            &=\sum_{i=1}^n\sum_{j=1}^na_i\gamma(t_i,t_j)a_j\\
+            &=\sum_{i=1}^n\sum_{j=1}^na_i\gamma(t_i-t_j)a_j\\
+        \end{split}
+    \end{equation*}
+    So the covariance function $\gamma$ is a non-negative definite function because of the arbitrary vector $\boldsymbol{a}\in\R^n$ that we have chosen.
+    No we will prove the $\Longleftarrow$ part. Remember the \textbf{Kolmogrov extension theorem}: suppose to have a system of finite-dimensional distributions $\mathcal{P}=\{\pi_{t_1,...,t_n}|t_1,...,t_n\in T, n\in\mathcal{N}\}$ (a set of measures, usually $T\subset\R$, where $\pi_{t_1,...,t_n}$ are probability measures on the measure space $(\R^n,\mathcal{B}(\R)^n)\ \forall n\in\N\ \forall t_1,...,t_n\in T$). Now suppose this system consistent, which means that:
+    \[
+        \pi_{t_1,...,t_n}(B_1\times...\times B_n)=\pi_{t_1,...,t_n,t_{n+1},...,t_{n+m}}(B_1\times...\times B_n\times m\R)  
+    \]
+    $\forall B_1,...,B_n\in\mathcal{B}(\R),\ m\in\N$ and:
+    \[
+        \pi_{t_1,...,t_n}(B_1\times...\times B_n)=\pi_{\sigma(t_1),...,\sigma{(t_n)}}(B_{\sigma(1)}\times...\times B_{\sigma{(n)}})
+    \]
+    $\forall B_1,...,B_n\in\mathcal{B}(\R),\ \sigma$ permutation of $\{1,...,n\}$. The Kolmogorov theorem states that there exist a probabilistic space $(\Omega,\mathcal{H},\mathbb{P})$ and a stocastic process $(X_t)_{t\in\Z}$ such that the family $\mathbb{P}$ is the system of finite distribution of $X$, that is:
+    \[
+        \mathbb{P}_{X_{t_1},...,X_{t_n}}(B)=\pi_{t_1,...,t_n}(B)\ \ \ \forall B\in\mathcal{B}(\R)^n,\ n\in\N  
+    \]
+    For example:
+    \begin{itemize}
+        \item $n=2 \implies \pi_{t_1}(B_1)=\pi_{t_1,t_2}(B_1\times\R)$
+        \item $n=2 \implies \pi_{t_1,t_2}(B_1\times B_2)=\pi_{t_2,t_1}(B_2\times B_1)$
+    \end{itemize}
+    So the Kolmogorov theorem states that if the system of finite dimensional distribution satifies the two consistency requirements than there exist a probability space and a stochastic process matching the finite dimensional system. In particular, two results follow from this theorem:
+    \begin{enumerate}
+        \item A system $\mathcal{P}_N$ of finite-dimensional Gaussian distributions is consisten (beacuse the vector of means and the covariance matrix completely determins all the finite dimenal Guassian distributions)
+        \item If $(X_t)$ and $(Y_t)$ are Gaussian time series such that $\forall n\in\N,\ \forall t_1,...,t_n\in T$ and $(X_{t_1},...,X_{t_n})\stackrel{d}{=}(Y_{t_1},...,Y_{t_n})$ then $\prob{X_t=X_t,\ \forall t\in T}=1$.
+    \end{enumerate} 
+    Now suppose that $\gamma:\Z\mapsto\R$ with \textit{1.} and \textit{2.} true. Seòect $t_1,...,t_n\in\Z$ and define:
+    \[
+        (\Gamma(n))_{ij}=\gamma(t_i-t_j)\ \ \ i,j=1,2,...,n  
+    \]
+    where $\Gamma(n)\ge0$. Consider:
+    \[
+        \Phi(\boldsymbol{z}):=\exp\left\{-\frac{1}{2}\boldsymbol{z}\Gamma(n)\boldsymbol{z}^\intercal\right\}\ \ \ \boldsymbol{z}\in\R^n
+    \]
+    which is the characteristic function of $\mathcal{N}(0,\Gamma(n))$. Remember that this function uniquely determines the distribution of a function. Denote with $\N(0,\Gamma(n))$ the distribution corresponding to $\Phi$ and denote with $\mathcal{P}_N$ the system of finite dimensional distribution. Then the Kolmogorov extension theorem states that:
+    \[
+        \exists(\Omega,\mathcal{H},\mathbb{P}),\ X=(X_t)_{t\in\Z}  
+    \]
+    having $\mathcal{P}_N$ as system of finite distributions. Now suppose to fix $n\in\N,\ t_1,...,t_n\in\Z$; then:
+    \begin{itemize}
+        \item $X_t\in\el{2}\ \ \ \forall t\in\{t_1,...,t_n\}$
+        \item $\expect{X_t}=0\ \ \ \forall t\in\{t_1,...,t_n\}$
+    \end{itemize}
+    Whe have to check that $cov(X_{t_i},X_{t_j})=function(t_i-t_j)\ \forall t_i,t_j\in\{t_1,...,t_n\}$. Observe that:
+    \[
+        \expect{e^{i(z_iX_{t_i}+z_jX_{t_j})}}=\lim_{\boldsymbol{z}(i,j)\to0}\expect{e^i(z_1X_{t_1}+...+z_nX_{t_n})}  
+    \]
+    where $\boldsymbol{z}(i,j)=n-2$-dimensional vector obtained from $\boldsymbol{z}=(z_1,...,z_n)$ deleting the $i$-th and $j$-th components. We can now write that:
+    \[
+        \expect{e^{i(z_iX_{t_i}+z_jX_{t_j})}}=\exp\left\{-\frac{1}{2}(z_i,z_j)\Gamma^{(i,j)}(n)\begin{pmatrix}z_i\\z_j\end{pmatrix}\right\}
+    \]   
+    where
+    \[
+        \Gamma^{(i,j)}(n)=
+        \begin{pmatrix}
+            \gamma(0)&\gamma(t_i-t_j)\\
+            \gamma(t_i-t_j)&\gamma(0)
+        \end{pmatrix}
+    \]  
+    Now we are ready to conclude the proof of this theorem, since $\gamma(t_i-t_j)=cov(X_{t_i}, X_{t_j})$.
+\end{proof}
+
+\begin{exercise}
+    Suppose $\gamma(h)=h\ \forall h\in\Z$. Is $\gamma$ an ACF?
+\end{exercise}
+
+\begin{exercise}
+    \text{}
+    \begin{itemize}
+        \item Consider $\gamma(h)=\cos(h),\ h\in\Z$. Is $\gamma(h)$ a ACF?
+        \item Find $(X_h)_{h\in\Z}$ having $\gamma(h)$ as ACF.
+    \end{itemize}
+\end{exercise}

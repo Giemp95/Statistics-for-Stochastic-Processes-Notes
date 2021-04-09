@@ -1,0 +1,239 @@
+\section{Lecture 3}
+\label{lecture3}
+
+\begin{center}
+    \textbf{Existence of a time series having a fixed autocovariance function. Strong and weak stationary time series, IID sequence, q-dependent time series, white noise, gaussian white noise. Simulation of GWN(0,1) and GWN(0,10) and modulated GWN(0,1).}
+\end{center}
+
+We have just seen the property referred to as the \textbf{weak stationarity property}. Now we will see the strong one; from now on, we will write $(X_t)$ instead of $(X_t)_{t\in\Z}$ to shorten the notation.
+
+\begin{definition}
+    A time series $(X_t)$ is said to be \textbf{strongly stationary} if
+    \[
+        \left(X_{t_1}, X_{t_2},...,X_{t_k}\right)\stackrel{d}{=}\left(X_{t_1+h}, X_{t_2+h},...,X_{t_k+h}\right)
+    \]
+    $\forall k\in\N,\ h\in\Z$ and $t_1,...,t_n\in\Z$.
+\end{definition}
+
+\begin{example}
+    A time series $(X_t)$ of iid random variables is strong stationary. To prove this statement, fix $k\in\N$ and $t_1,...,t_k\in\Z$ such that
+    \begin{equation*}
+        \begin{split}
+            \prob{X_{t_1}\le x_1,...,X_{t_k}\le x_k}&\stackrel{IND}{=}\prod_{i=1}^{k}\mathbb{P}_{X_{t_i}}(-\infty,x_i]\\
+            &=\prod_{i=1}^{k}\mathbb{P}(-\infty,x_i)\\
+            &=\prod_{i=1}^k\mathbb{P}_{t_i+h}(-\infty,x_i]\\
+            &\stackrel{IND}{=}\prob{X_{t_1+h}\le x_1, X_{t_2+h}\le x_2,...,X_{t_k+h}\le x_k}
+        \end{split}
+    \end{equation*}
+    for $h\in\Z$.
+\end{example}
+
+Now let us see a little R example on these topics:
+
+\begin{verbatim}
+    ####################################
+    # Generating Gaussian time series #
+    ####################################
+
+    # generate a sample path of values from N(0,1): 
+    # set the seed to 154
+    set.seed(154)
+    w=rnorm(1000,0,1)
+    help('rnorm')
+    # two plots in the same window
+    par(mar=c(2,2,2,2))
+    par(mfrow=c(2,1))
+    # plot of w: points on the window
+    plot(w,main='A path of gaussian time series N(0,1)')
+    # a red line to show where the zero mean is located
+    abline(h=0,col=c('red'),lwd=3)
+    # plot.ts to have a line trought the dots
+    plot.ts(w,type='o',main='The same path')
+    abline(h=0,col=c('red'),lwd=3)
+    # generate a sample path of 1000 values from N(0,10)
+    w1=rnorm(1000,0,sqrt(10))
+    # plot.ts to have a line trought the dots
+    plot.ts(w,type='o',main='A path of gaussian time series N(0,1)')
+    abline(h=0,col=c('red'),lwd=3)
+    # plot.ts to have a line trought the dots
+    plot.ts(w1,type='o',main='A path of gaussian time series N(0,10)')
+    abline(h=0,col=c('red'),lwd=3)
+    # Be careful to y-axis.
+    plot.ts(w,type='o',main='A path of gaussian time series N(0,1)',
+        ylim=c(-10,10))
+    abline(h=0,col=c('red'),lwd=3)
+    plot.ts(w1,type='o',main='A path of gaussian time series N(0,10)',
+        ylim=c(-10,10))
+    abline(h=0,col=c('red'),lwd=3)
+\end{verbatim}
+
+Strong stationarity is very difficult to achieve, so a weakened version is often more useful.
+
+\begin{definition}
+    A time series $(X_t)$ is said to be \textbf{strong stationary of order $k$} if
+    \[
+        \left(X_{t_1}, X_{t_2},...,X_{t_k}\right)\stackrel{d}{=}\left(X_{t_1+h}, X_{t_2+h},...,X_{t_k+h}\right)
+    \]
+    for a fixed $k\in\N$, $\forall t_1,...,t_k\in\Z$ and $h\in\Z$.
+\end{definition}
+
+\begin{example}
+    Plot a path of $X_t=W_t\sin(2\pi\omega t)$ with $\omega=\frac{1}{500}$, $t=1,...,1000$ and $(W_t)$ iid $\sim\mathcal{N}(0,1)$.
+    \begin{verbatim}
+    ################################################
+    # Generating a modulated Gaussian time series #
+    ################################################
+        
+    # generate a sample path of values from N(0,1): set the seed to 154, 
+    # so we reproduce the same results
+    set.seed(154)
+    w=rnorm(1000,0,1)
+    #
+    plot.ts(w*sin(2*pi*(1:1000)/500),main='Gaussian time series N(0,1) 
+        modulated by a sin', ylab='X_t')
+    lines(sin(2*pi*(1:1000)/500),col=c('red'),lwd=3)
+    \end{verbatim}
+\end{example}
+
+So, what is the relationship between the strong and weak stationary time series? Despite their name, the strong stationary property does not always imply the weak one. Let us see an example.
+
+\begin{example}
+    Consider a time series $(X_t)$ made up of iid random variables with Cauchy distribution:
+    \[
+        f(x)=\frac{1}{\pi(1+x^2)}\ \ \ x\in\R  
+    \]
+    then $(X_t)$ is obiovsly strong stationary, but it is not weak stationary since $X_t\notin\el{2}$.
+\end{example}
+
+\begin{theorem}
+    Suppose $(X_t)$ strong stationary and $(X_t)\in\el{2}\ \forall t\in\Z$. Then $(X_t)$ is weak stationary.
+\end{theorem}
+
+\begin{proof}
+    $X_t\in\el{2}\ \forall t\in\Z\ \implies\ \mu_t=\expect{X_t}<\infty\ \forall t\in\Z$. Then, from the strong stationarity it follows that $X_t\stackrel{d}{=}X_{t+h}\ \forall t,h\in\Z\ \implies\ \mu_t=\mu_{t+h}\ \implies \expect{X_t}=const$. Now, considering the Cauchy-Schwarts inequality we have that $\expect{X_tX_s}<\infty\ \forall t,s\in\Z$, so:
+    \begin{equation*}
+        \begin{split}
+            \expect{X_tX_s}&=\int_{\R^2}xy\mathbb{P}_{X_sX_t}(dx,dy)\\
+            &=\int_{\R^2}xy\mathbb{P}_{X_{s+h}X_{t+h}}(dx,dy)\\
+            &=\expect{X_{s+h}X_{t+h}}
+        \end{split}
+    \end{equation*}
+    Consider than the covariance:
+    \begin{equation*}
+        \begin{split}
+            cov(X_s,X_t)&=\expect{(X_s-\mu_s)(X_t-\mu_t)}\\
+            &=\expect{X_sX_t}-\mu_s\mu_t\\
+            &=\expect{X_{s+h}X_{t+h}}-\mu_{s+h}\mu_{t+h}\\
+            &=cov(X_{s+h},X_{t+h})
+        \end{split}
+    \end{equation*}
+    implying that $cov(X_s,X_t)=cov(X_{s+h},X_{t+h})=\gamma(0,h)\ \forall h\in\Z$. Then, since the covariance depends on the lag window we can conclude that the time series is weak stationary.
+\end{proof}
+
+Of course, also the weak stationarity property does not imply the strong one.
+
+\begin{exercise}
+    Consider $(X_t)_{t\in\Z}$ iid random variables $\sim\mathcal{N}(0,1)$. Define:
+    \[
+        X_t=\begin{cases}Z_t & t\ odd\\\frac{Z_{t-1}^2-1}{\sqrt{2}} & t\ even\end{cases}  
+    \]
+    \begin{itemize}
+        \item Is $(X_t)$ strong stationary?
+        \item Is $(X_t)$ weak stationary?
+    \end{itemize}
+\end{exercise}
+
+\begin{definition}
+    A time series $(X_t)$ is said to be \textbf{white noise} if 
+    \begin{itemize}
+        \item $(X_t)$ is stationary
+        \item $\expect{X_t}=0\ \ \ \forall t\in\Z$
+        \item $\gamma(0)=\sigma^2,\ \gamma(h)=0\ \ \ \forall h\in\Z-\{0\}$ 
+    \end{itemize}
+    Notation:
+    \begin{itemize}
+        \item white noise: $(X_t)\sim\mathcal{WN}(0,\sigma^2)$
+        \item iid random variables: $(X_t)\sim\mathcal{IID}(0,\sigma^2)$
+        \item Gaussian white noise: $(X_t)\sim\mathcal{GWN}(0,\sigma^2)\implies X_t\sim\mathcal{N}(0,\sigma^2)$
+    \end{itemize}
+\end{definition}
+
+\begin{remark}
+    While $\mathcal{IID}(0,\sigma^2)\implies\mathcal{WN}(0,\sigma^2)$, the other way is not always true. It also true that $\mathcal{GWN}(0,\sigma^2)\implies\mathcal{IID}(0,\sigma^2)$ since:
+    \[
+        \boldsymbol{\Sigma}_{n}=diag(\sigma^2,...,\sigma^2)  
+    \]
+    implying that:
+    \begin{equation*}
+        \begin{split}
+            f(\boldsymbol{x})&=\frac{1}{(2\pi)^{\frac{n}{2}}\sqrt{\abs{\boldsymbol{\Sigma}_{n}}}}\exp\left\{-\frac{1}{2}\boldsymbol{x}\boldsymbol{\Sigma}_n^{-1}\boldsymbol{x}^\intercal\right\}\\
+            &=\frac{1}{(2\pi)^{\frac{n}{2}}\sqrt{(\sigma^2)^n}}\exp\left\{-\frac{1}{2}\sum_{i=1}^{n}\frac{x_i^2}{\sigma^2}\right\}\\
+            &=\frac{1}{(\sqrt{2\pi\sigma^2})^n}\prod_{i=1}^n\exp\left\{-\frac{1}{2}\frac{x_i^2}{\sigma^2}\right\}\\
+            &=\prod_{i=1}^n\frac{1}{\sqrt{2\pi\sigma^2}}\exp\left\{-\frac{1}{2}\frac{x_i^2}{\sigma^2}\right\}\\
+        \end{split}
+    \end{equation*}
+    This gives independence among the random variables of the series.
+\end{remark}
+
+Since the strong and weak stationarity are very strong assumptions, seldom encountered in real situations, we can relax a little the requirements.
+
+\begin{definition}
+    A time series $(X_t)$ is said to be \textbf{q-dependet} if the random variable $X_t$ and $X_s$ are independent whenever $\abs{t-s}>q$, with $q\in\N$.
+\end{definition}
+
+\begin{example}
+    A $\mathcal{IID}$ time series is 0-dependant.
+\end{example}
+
+\begin{proposition}
+    Consider two time series $(Y_t)\sim\mathcal{IID}$ and $(X_t)$ such that $X_t=g(Y_t,...,Y_{t-q})\ \forall t\in\Z$ with $g$ being a measurable function.
+    \begin{enumerate}
+        \item $(X_t)$ is q-dependent;
+        \item $(X_t)$ is strong stationary.
+    \end{enumerate}
+\end{proposition}
+\begin{proof}
+    1. Set $t=s+h$ and $h>q$. Consider
+    \begin{equation*}
+        \begin{split}
+            Y_{s-q},...,Y_{s-1},Y_s,.&..,Y_{s+h-q},...,Y_{s+h-1},Y_{s+h}\\
+            g(Y_s,...,Y_{s-q})\rightarrow&IND\leftarrow g(Y_{s+h},Y_{s+h-q})\\
+            X_s\rightarrow&IND\leftarrow X_{s+h}\\
+        \end{split}
+    \end{equation*}
+    $\forall s\in\Z$.
+    
+    2. Fix $n\in\N,\ t_1,...,t_n\in\Z$:
+    \begin{equation*}
+        \begin{split}
+            (Y_{t_1},...,Y_{t_1-q})&\stackrel{d}{=}(Y_{t_1+h},...,Y_{t_1+h-q})\\
+            (Y_{t_n},...,Y_{t_n-q})&\stackrel{d}{=}(Y_{t_n+h},...,Y_{t_n+h-q})\\
+        \end{split}
+    \end{equation*}
+    \begin{equation*}
+        \begin{split}
+            (X_{t_1},...,X_{t_n})&=(g(Y_{t_1},...,Y_{t_1-q}),...,g(Y_{t-n},...,Y_{t_n-q}))\\
+            &\stackrel{d}{=}(g(Y_{t_1+h},...,Y_{t_1+h-q}),...,g(Y_{t-n+h},...,Y_{t_n+h-q}))\\
+            &=(X_{t_1+h,...,X_{t_n+h}})
+        \end{split}
+    \end{equation*}
+    $\forall h\in\Z$.
+\end{proof}
+
+\begin{remark}
+    $(Y_t)\in\el{2}\notimplies(X_t)\in\el{2}$
+\end{remark}
+
+\begin{example}
+    $X_1,X_2\sim\mathcal{C}\implies X_1,X_2\notin\el{2},\ \frac{X_1}{X_2}\sim\mathcal{N}(0,1)\in\el{2}$
+\end{example}
+
+A special case of the $g$ function is when it is a polinomia function ($g(x_0,...,x_q)=x_0+\phi_1x_1+...+\phi_qx_q$).
+
+\begin{example}
+    A very popular time series is $(W_t)\sim\mathcal{IID}(0,\sigma^2)$ with $(X_t)$ such that:
+    \[
+        X_t=W_t+\phi_1W_{t-1} +...+\phi_qW_{t-q}\ \ \ t\in\Z,\ q\in\N
+    \] 
+    then $(X_t)$ is q-dependant and strong stationary. This property is frequently exploited to build strong stationary time series.
+\end{example}

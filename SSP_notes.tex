@@ -1,0 +1,81 @@
+\documentclass[a4paper]{article}
+\usepackage[utf8]{inputenc}
+
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{dsfont}
+\usepackage{graphicx}
+\usepackage{bbm}
+
+
+\theoremstyle{plain}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{example}{Example}[section]
+\newtheorem{remark}{Remark}[section]
+\newtheorem{lemma}{Lemma}[section]
+\newtheorem{corollary}{Corollary}[section]
+\newtheorem{exercise}{Exercise}[section]
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}{Proposition}[section]
+
+\newcommand{\mean}[1]{\bar{#1}}
+\newcommand{\app}[1]{\tilde{#1}}
+\newcommand{\notimplies}{\mathrel{{\ooalign{\hidewidth$\not\phantom{=}$\hidewidth\cr$\implies$}}}}
+\newcommand{\prob}[1]{\mathbb{P}\left(#1\right)}
+\newcommand{\expect}[1]{\mathbb{E}\left[#1\right]}
+\newcommand{\Tau}{\mathrm{T}}
+\newcommand{\impliesas}{\stackrel{a.s.}{\implies}}
+\newcommand{\eqas}{\stackrel{a.s.}{=}}
+\newcommand{\el}[1]{\mathcal{L}^{#1}}
+\newcommand{\lf}[1]{\mathcal{L}\left[#1\right]}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\set}[1]{\left\{#1\right\}}
+\newcommand{\1}{\mathbbm{1}}
+\newcommand{\abs}[1]{\left|#1\right|}
+
+
+\begin{document}
+\thispagestyle{empty}
+\vspace*{-3cm}
+\begin{center}
+    {\Large{M.Sc. in Stochastic and Data Science}}
+    \vspace{0.5cm} \hrule \vspace{5.5cm}
+    {\Large\bf{Statistics for Stocastic Processes\\}}
+    {A.Y. 2020/2021\\}
+    \vspace{1cm}
+    {Prof. Elvira DI NARDO - Prof. Luis Alberiko Gil-Ala\~{n}a}
+\end{center}
+\vspace*{5cm}
+{\hspace*{7cm} \parbox{8.2cm}
+    {\begin{tabular}{ll}
+        Written by & Gianluca MITTONE
+    \end{tabular}
+    }
+}
+
+\newpage
+\pagenumbering{Roman}
+\tableofcontents
+
+\newpage
+\pagenumbering{arabic}
+
+\include{lecture1}
+\include{lecture2}
+\include{lecture3}
+\include{lecture4}
+\include{lecture5}
+\include{lecture6}
+\include{lecture7}
+\include{lecture8}
+\include{lecture9}
+\include{lecture10}
+\include{lecture11}
+
+\end{document}

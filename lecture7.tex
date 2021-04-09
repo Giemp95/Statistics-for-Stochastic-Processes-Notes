@@ -1,0 +1,390 @@
+\section{Lecture 7}
+\label{lecture7}
+
+\begin{center}
+    \textbf{Transformations of data and difference operators: examples in R. Handling time series in R. Additive models: decomposition in trend and seasonal components and remainder term. The STL procedure in R: examples and exercises.  Global and local trend: linear trend, regression and approximation. Filtering: two sided moving average, asymmetric filter. The function filter in R.}
+\end{center}
+
+Let us start with some examples about the transformations of time series in R.
+
+\begin{example}
+    \begin{verbatim}
+######################################### 
+# Transformation of the dataset jj 
+######################################### 
+
+# load the library astsa 
+library (astsa) 
+
+# load the dataset jj
+data(jj) 
+
+# plot the time series in a new window 
+windows() 
+plot(jj, type='o',ylab='Earning per Share',main='J&J') 
+
+# apply the log-transformation 
+windows() 
+plot(log(jj), type='o', ylab='J&J',main='Log-transformation') 
+
+# apply the diff-transformation 
+windows() 
+plot(diff(jj),type='o', ylab=1J&J',main=1Diff-transformation') 
+
+# apply the iterated diff-transformation 
+windows() 
+plot(diff(jj,2),type='o', ylab='J&J',main='Diff2-transformation') 
+
+# apply both transformations 
+windows() 
+plot(diff(log(jj)), type='o', ylab=1J&J',main=1Diff-Log-transformation') 
+
+# apply both transformations + iterated difference operator 
+windows() 
+plot(diff(log(jj),2), type='o', ylab='J&J',main='Diff2-Log-transformation') 
+
+# dev.off() to close the windows 
+# apply the Box-Cox transformation 
+# install the packages forecast 
+install.packages('forecast') 
+
+#load the library 
+library(forecast) 
+
+# to find optimal lambda 
+(lambda = BoxCox.lambda(jj)) 
+
+# now to transform jj 
+trans.jj = BoxCox( jj, lambda) 
+
+# comparisons with the log transformation 
+windows() 
+par(mfrow=c(2,1)) plot(log(jj), type='o', ylab='J&J',main='Log-transformation') 
+plot(trans.jj, type=101,ylab=1J&J',main=1Power transformation') 
+    \end{verbatim}
+\end{example}
+
+How to handle time series is R?
+
+\begin{example}
+    \begin{verbatim}
+##########################################
+# handling time series
+##########################################
+
+# create a vector 
+(mydata = c(l,2,3,2,l))
+
+# transform mydata in a ts object 
+(mydata = ts(mydata))
+
+# Is mydata a ts? 
+is.ts(mydata) 
+is.ts(c(l,2,3,2,l))
+
+# set the initial time
+(mydata = ts(c(1,2,3,2,1), start=1950))
+
+# check the time 
+time(mydata)
+
+# set a different initial time and a different frequency 
+(mydata=ts(c(1,2,3,2,1), start=c(1950,3), frequency=4))
+
+# check the time 
+time(mydata)
+
+# useful functions 
+start(mydata) 
+end(mydata) 
+frequency(mydata) 
+deltat(mydata)
+
+# select a part of ts
+(x = window(mydata, start=c(1951,1), end=c(1951,3)))
+
+# shift ts
+cbind(x,lag(x),lag(x,l),lag(x,2),lag(x,0),lag(x,-l),lag(x,-2))
+
+# load jj 
+library(astsa) 
+data (jj)
+is.ts (jj)
+start(j j) 
+end(j j)
+frequency(j j)
+
+# select a window
+(x = window(jj, start=c(1965,3), end=c(1970,1)))
+# ts.plot (same frequency) 
+windows()
+ts.plot(cmort,tempr,col=c(1 red1,'blue 1),main=1 Two plots') 
+legend("topright", legend = c("cmort", "tempr "), lty = 1, col=c('red','blue') , 
+    title = "Line colors", cex = 1.0)
+    \end{verbatim}
+\end{example}
+
+Traditional methods, in the analysis of time series, are mainly based on an addtive model:
+\[
+    X_t=m_t+s_t+Y_t  
+\]
+
+where $m_t$ is the \textbf{trend}, $s_t$ the \textbf{seasonal component} and $Y_t$ the \textbf{remainder}. The first two quatities are deterministic, while the last one is stochastic. This is not by any means the best model available for time series, but is the first one that scientists use with new data. In short words:
+\begin{itemize}
+    \item trend: identifies long term change in the mean leavel;
+    \item seasonal component: short term regular pattern on fixed period (yearly/monthly);
+    \item cyclic component: like the seasonal one, but may vary in lenght.
+\end{itemize}
+One method for removing the trend from a time series is by using $\nabla$.
+
+\begin{example}
+    \[
+        \begin{cases}
+            X_t=m_t+Y_t&with\ m_t=at+b,\ a,b\in\R\\
+            X_{t-1}=m_{t-1}+Y_{t-1}
+        \end{cases}    
+    \]
+    In this case, appling $\nabla$, results in
+    \[
+        \nabla X_t=X_t-X_{t-1}=m_t-m_{t-1}+(Y_t-Y_{t-1})  
+    \]
+    which is a stationary time series.\\
+    If $m_t=p(t)$ polynomial of degree $k$ then we can apply $\nabla^k$.
+\end{example}
+
+On the other hand, $\nabla_d$ can remove the seasonal component.
+
+\begin{example}
+    Consider
+    \[
+        X_t=s_t+Y_t
+    \]
+    with period $d$ such that $s_t=s_{t-d}\ \forall t$. Then we have that
+    \[
+        \nabla_d X_t=s_t+Y_{t-d}-s_{t-d}-Y_{t-d}    
+    \]
+    which has period $d=0$.
+\end{example}
+
+A useful R function for working with the additive model is the Sesonal and Trend Loess decomposition (\textbf{STL procedure}). Loess stands for locally weighted scatterplot smoothing: a kind of piecewise regression.
+
+\begin{example}
+    \begin{verbatim}
+#########################################
+# Decomposition
+#########################################
+
+# check the class 
+class (j j)
+frequency(j j )
+
+# the STL decomposition 
+comp=stl(j j,1 per1)
+
+# The procedure gives in output a matrix comp$time.series with 3 columns 
+head(comp$time.series, 10)
+
+# To see the decomposition 
+windows()
+plot(comp,main='J&J decomposition')
+
+# Plot all the extracted subseries from a time series in one frame 
+windows()
+par(mfrow = c(2,2))
+monthplot(jj, main='datal)
+monthplot(comp, choice = "trend", main='trend')
+monthplot(comp, choice = "seasonal", main='seasonal')
+monthplot(comp, choice = "remainder", type = "h",main='remainder')
+
+# to understand the plot
+(x=window(comp$time.series[,1],start=start(comp$time.series[,
+1]),end=c(1968,4)))
+
+# compare the decomposition with the transformed dataset
+# the STL decomposition to diff(log(jj),2) 
+compl=stl(diff(log(jj),2),'per')
+
+# To see the decomposition 
+windows()
+plot(compl,main='Transformed J&J decomposition')
+    \end{verbatim}
+\end{example}
+
+So, when we fit a time series with an additive model we aim to approximate the trend and the seasonal component and to get residuals. Now we will see how we can work with these elements.
+
+One of the simplest way to fit a trend component is the linear model:
+\[
+    m_t=\alpha+\beta t  
+\]
+with $\alpha$ and $\beta$ obtained with a regression procedure. This approach works for gloabl trends, bu we can adopt some modifications for fitting local trend:
+\[
+    m_t=\alpha_t+\beta_t t  
+\]
+In this case we can retrieve $\alpha_t$ and $\beta_t$ by approximation or interpolation.
+
+\begin{example}
+    Suppose we want to fit an exponential trend (like the one of the dataset jj):
+    \begin{equation*}
+        \begin{split}
+            m_t&=\alpha\exp\set{\beta t}\\
+            \log m_t&=\log \alpha+\beta t\ \ \ regression procedure\\
+            m_t&=\exp\set{A}\exp\set{Bt}
+        \end{split}
+    \end{equation*}
+\end{example}
+
+\begin{example}
+    \begin{verbatim}
+#################################################
+# Analysis of the trend: jj dataset
+#################################################
+
+# assign to the variable "trend" the column with the trend component 
+trend=comp$time.series[,2]
+
+# take the time
+time.trend = time(trend)
+
+# ask for an exponential fitting, that is y=a*exp(b*t)=> log y = log a + b*t
+fit=lm(log(trend) ~ time.trend, na.action=NULL)
+
+# plot the results: if A and B are the output of the lm procedure the exponential
+# model is exp(A)*exp(B*t)
+plot(trend,main='Fitting the trend component')
+y=exp(fit$coefficients[1])*exp(fit$coefficients[2]*time.trend)
+lines(y, col='red')
+    \end{verbatim}
+\end{example}
+
+\begin{example}
+    \begin{verbatim}
+#################################################
+# Analysis of the trend: Cardiovascular Mortality
+#################################################
+
+#load the library 
+library(astsa)
+
+# plot the time series
+plot(cmort, main="Cardiovascular Mortality", xlab="years", ylab="age")
+
+# check the frequency and tie class 
+class(cmort) 
+frequency(cmort)
+
+# more information 
+start(cmort)
+end(cmort)
+
+# ask for the decomposition 
+comp=stl(cmort,'per')
+plot(comp)
+
+# monthplot to understand the dominance 
+monthplot(cmort, main='data')
+
+# extrapolate the trend component with the time 
+trend=comp$time.series[,2]
+time.trend=time(comp$time.series[,2])
+
+# plot in a new window the trend component with the spline approximation 
+plot(time.trend, trend, main = "Approximation with a cubic spline") 
+lines(spline(time.trend,trend),col='red')
+
+#to get the spline function 
+splinefun(time.trend,trend)
+    \end{verbatim}
+\end{example}
+
+An other technique to deal with trends is to use a \textbf{filter} that transform a time series in an other time series by using a linear transformations (\textbf{moving average}):
+\[
+    \tilde{x}_t=\sum_{j=-k}^pa_jx_{t+j}  
+\]
+with $\set{a_j}$ such that $\sum a_j=1$ (often $a_j\in[0,1]$). A variation of this technique is the \textbf{symmetric moving average}, where $p=k$ and $a_j=a_{-j}$. The simplest example of a symmetric smoothing filter is the \textbf{two-sided moving average}:
+\[
+    a_j=\frac{1}{2k+1},\ j=-k,...,k\ \implies\ \tilde{x}_t=\frac{1}{2k+1}\sum_{j=-k}^k x_{t+j}  
+\]
+This will allow us to smooth the local fluctuations of the data, but only works at the center of the dataset, due to his construction.
+
+There exists also \textbf{asymmetric filters}. A simple one is the \textbf{one-sided moving average}:
+\[
+    a_j=\frac{1}{k+1},\ j=0,...,k\ \implies\ \tilde{x}_t=\frac{1}{k+1}\sum_{j=0}^kx_{t-j}  
+\]
+This filter can be used for a variety of operations:
+\begin{itemize}
+    \item forecasting: $\tilde{x}_{n+h}=\frac{1}{k+1}\sum_{j=0}^kx_{n-j}$
+    \item naive forecasting: $k=0\implies\tilde{x}_{n+h}=x_n$
+    \item two-term forecast: $k=1\implies\tilde{x}_{n+h}=\frac{1}{2}(x_n+x_{n-1})$
+\end{itemize}
+One more asymmetric filter is the \textbf{exponential smoothing}:
+\[
+    \tilde{x}_t=\sum_{j=0}^m\alpha(1-\alpha)^jx_{t-j},\ t-m>0,\ \alpha\in(0,1)  
+\]
+
+\begin{example}
+    \begin{verbatim}
+#################################################
+# Filtering the trend of jj dataset
+#################################################
+
+# use a filter to smooth trend 
+(k=rep(l,5)) # weights=l 
+(k=k/sum(k)) # normalized weights
+
+# two sided moving average: sides=2
+# fjj(t)=0.2*trend(t-2)+0.2*trend(t-1)+0.2*trend(t)+0.2*trend(t+1)+0.2*trend(t+2)
+(fjj=filter(trend,methodic('convolution'),sides=2, k))
+
+# Not Available elements appear for t=l and 2 and at the end points
+# plot the original dataset and the filtered dataset 
+windows()
+plot(trend,main=1 Filtering the trend component: 2 sided1) 
+lines(fjj, col='redl)
+
+# one-sided moving average: sides=l
+#
+fjj(t)=0.2*trend(t-4)+0.2*trend(t-3)+0.2*trend(t-2)+0.2*trend(t-1)+0.2*trend(t) 
+(fjjl=filter(trend,method=c(1conv'),sides=l, k))
+
+# Plot 
+windows()
+plot(trend, ylab='Earning per Share',main='Filtering the trend component: 1 
+sided',ylim=c(0,12) ) 
+lines(fjjl, col='blue')
+    \end{verbatim}
+\end{example}
+
+Under suitable conditions, the two sided moving averrage filter may be used to approximate a linear trend.
+
+\begin{example}
+    In the absence of a seasonal component and in the presence of a linear trend, prove that the two sided moving average of lag x is approximately equal to the trend. Assume the average og the remainder term over $[t-k,t+k]$ appeoximately $0$ for all $k$ such that $n-2k>0$.
+
+    Consider the two sided moving average filter:
+    \[
+        \tilde{x}_t=\frac{1}{2k+1}\sum_{j=-k}^kx_{t+j}  
+    \]
+    with $1+k\le t\le n-k$. This because the first index of the summation $1\le t-k \le t+k \le n$ the last index of the summation. Now, the additive model is
+    \[
+        X_t=m_t+Y_t  
+    \]
+    since we do not have a seasonal component. Substituting $x_{t+j}$ with $m_{t+j}+y_{t+j}$ we obtain
+    \begin{equation}
+        \begin{split}
+            \tilde{x}_t&=\frac{1}{2k+1}\sum_{j=-k}^km_{t+j}+\frac{1}{2k+1}\sum_{j=-k}^ky_{t+j}\\
+            &\simeq\frac{1}{2k+1}\sum_{j=-k}^km_{t+j}\\
+            &=\frac{1}{2k+1}\left[a(t-k)+b+a(t-k+1)+b+...+a(t+k-1)+b+a(t-k)+b\right]\\
+            &=\frac{1}{2k+1}\left[(2k+1)(at+b)+(-ak-ak+a+...+ak-a+ak)\right]\\
+            &=\frac{1}{2k+1}(2k+1)(at+b)\\
+            &=at+b\\
+        \end{split}
+    \end{equation}
+    Thus proving that the two sided moving average approximately gives an approximation of the trend.
+\end{example}
+
+\begin{exercise}
+    Let $Y_t$ be a stationary time series with zero mean. Consider also a time series $X_t=a+bt+s_t+Y_t$ with $a,b\in\R$, where $s_t$ is a seasonal component with period $d=12$. Show that 
+    \[
+        \nabla\nabla_{12}X_t  
+    \]
+    is stationary, and express its ACF in terms of the ACF of $\set{Y_t}$.
+\end{exercise}

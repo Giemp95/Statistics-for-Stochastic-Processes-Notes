@@ -1,0 +1,342 @@
+\section{Lecture 10}
+\label{lecture10}
+
+\begin{center}
+    \textbf{Case studies in R of MA(1). The Wold's decomposition: deterministic t.s. and its meaning within forecasting. Invertible t.s. and its relation with identifiability of a model. Algebraic rules to work with the multiplicative inverse of an operator.  Autoregressive t.s. of order p: the case p=1}
+\end{center}
+
+\begin{example}
+    Simulate a path of 
+    \begin{itemize}
+        \item $MA(1): X_t=W_t-0.2W_{t-1}$
+        \item $MA(2): X_t=W_t-0.2W_{t-1}+0.6W_{t-2}$
+        \item $MA(3): X_t=W_t-0.2W_{t-1}+0.6W_{t-2}+0.9W_{t-3}$
+    \end{itemize}
+    Suppose that $(W_t)\sim\mathcal{GWN}(0,\sigma^2)$. Set the seed=154, n=200 and compare the estimated ACF with the theoretical one.
+    \begin{verbatim}
+####################################
+# Simulation of paths from MA(q)
+####################################
+
+set.seed(154)
+phi1=-0.2
+phi2=0.6
+phi3=0.9
+
+# simulation of MA(-0.2), MA(-0.2,0.6), MA(-0.2,0.6,0.9)
+ma.sim1=arima.sim(list(ma=phi1),200)
+ma.sim2=arima.sim(list(ma=c(phi1,phi2)),200)
+ma.sim3=arima.sim(list(ma=c(phi1,phi2,phi3)),200)
+
+# plot the three MA models
+windows()
+plot(cbind(ma.sim1,ma.sim2,ma.sim3),type='o',main='MA(1),
+MA(2),
+MA(3)')
+
+# ACF plots
+library(astsa)
+windows()
+par(mfrow=c(3,1))
+out1=acf1(ma.sim1,max.lag=100,main='MA(1)')
+out2=acf1(ma.sim2,max.lag=100,main='MA(2)')
+out3=acf1(ma.sim3,max.lag=100,main='MA(3)')
+
+# MA(1)
+(rho1MA1=phi1/(1+phi1^2))
+out1[1:3]
+
+#MA(2)
+den1=1+phi1^2+phi2^2
+cbind(rho1MA2=(phi1*(1+phi2))/den1, rho2MA2=phi2/den1)
+out2[1:4]
+
+#MA(3)
+den2=1+phi1^2+phi2^2+phi3^2
+cbind(rho1MA3=(phi1+phi1*phi2+phi2*phi3)/den2, 
+rho2MA3=(phi2+phi1*phi3)/den2, rho3MA3=phi3/den2)
+out3[1:5]
+    \end{verbatim}
+\end{example}
+
+\begin{definition}
+    The \textbf{Wold's decomposition} states that any stationary time series $(X_t)$ can be decomposed in
+    \[
+        X_t=\sum_{j\ge0}\psi_jW_{t-j}+Z_j  
+    \]
+    where $\sum_{j\ge0}\psi_jW_{t-j}=MA(\infty)$ and $Z_t$ a deterministic time series. Note that $cov(W_t,Z_s)=0\ \forall t,s\in\Z$.
+\end{definition}
+
+However, what is a deterministic time series? Suppose to want to predict the value of $Z_{t+h}$ based on $z_{T-1},...,Z_{t-n}$; an idea would be to use a linear combination fo the available data in order to predict the unknown one: chose a set $\set{\alpha_{i,n}^{(h)}}_{i=0}^n$ that minimizes
+\[
+    \expect{\left(Z_{t+h}-\alpha_{0,n}^{(h)}-\alpha_{1,n}^{(h)}Z_{t-1}+...+\alpha_{n,n}^{(h)}Z_{t-n}\right)^2}  
+\]
+then the variable
+\[
+    P_{\set{Z_{t-1},...,Z_{t-n}}}(Z_{t+h})=\alpha_{0,n}^{(h)}-\alpha_{1,n}^{(h)}Z_{t-1}+...+\alpha_{n,n}^{(h)}Z_{t-n}
+\]
+is called the \textbf{orthogonal projection}.
+
+\begin{definition}
+    If $(Z_t)$ stationary, the orthogonal projection of $Z_{t+h}$ on $Z_{t-1},Z_{t-2},...$ is
+    \[
+        P_{\set{Z_{t-1},Z_{t-2},...}}(Z_{t+h})\stackrel{def}{=}\lim_{n}P_{\set{Z_{t-1},...,Z_{t-n}}}(Z_{t+h})
+    \]
+\end{definition}
+
+\begin{definition}
+    A time series $(Z_t)$ is \textbf{deterministic} if
+    \[
+        P_{\set{Z_{t-1},Z_{t-2},...}}(Z_{t})=Z_t
+    \]
+\end{definition}
+
+\begin{example}
+    Consider a time series $(Z_t)$ such that $Z_t=A\cos(\omega t)+B\sin(\omega t)$ with $\omega\in(0,\pi)$ and $A,B$ uncorrelated random variables such that $\expect{A}=\expect{B}=0,\ \expect{A^2}=\expect{B^2}=\sigma^2$. Then:
+    \begin{itemize}
+        \item $(Z_t)$ is stationary
+        \item $P_{\set{Z_{t-1},Z_{t-2},...}}(Z_{t})=2\cos\omega Z_{t-1}-Z_{t-2}=Z_t\implies(Z_t)$ is deterministic
+    \end{itemize}
+\end{example}
+
+\begin{definition}
+    Suppose $(X_t)$ a zero mean, stationary non deterministic time series. $(X_t)$ is said \textbf{purely non deterministic} if $Z_t=0\ \forall t\in\Z$.
+\end{definition}
+
+An example of a purely non-deterministic time series is $MA(\infty)$.
+
+\begin{exercise}
+    Consider $(X_t)$ such that $X_t=W_t+Y$ where $(W_t)\sim\mathcal{WN}(0,\sigma^2)$, $Y$ is a random variable with $\expect{Y}=0,\ \expect{Y^2}=\sigma^2$ and $\cos(W_t,Y)=0\ \forall t\in\Z$. Give the Wold decomposition of $X_t$.
+\end{exercise}
+
+\begin{theorem}
+    \label{theorem_wold}
+    Any zero-mean non deterministic stationary time series $(X_t)$ can be decomposed as
+    \[
+        X_t=\sum_{j\ge0}\psi_jW_{t-j}+Z_t  
+    \]
+    where
+    \begin{enumerate}
+        \item $\psi_0=1,\ \sum_{j\ge0}\psi_j^2<\infty$
+        \item $(W_t)\sim\mathcal{WN}(0,\sigma^2)$
+        \item $cov(W_t,Z_s)=0\ \forall t,s\in\Z$
+        \item $W_t$ is the limit of the linear combination of $X_s,\ s<t$
+        \item $(Z_t)$ is a deterministic time series
+    \end{enumerate}
+\end{theorem}
+
+\begin{example}
+    Consider a function
+    \[
+        \rho(h)=\begin{cases}
+            1&h=0\\
+            \frac{\phi_1}{1+\phi_1^2}&h=\pm1\\
+            0&\abs{h}>1\\
+        \end{cases}\ \ \ \phi_1\in\R
+    \]
+    This is the ACF of $X_t=W_t+\phi_1W_{t-1}$ with $(W_t)\sim\mathcal{WN}(0,\sigma^2)$, but also of $X_t'=W_t+\frac{1}{\phi_1}W_{t-1}$ with $(W_t)\sim\mathcal{0,\sigma^2}$, since
+    \[
+        \frac{\phi_1}{1+\phi_1^2}=\frac{\frac{\phi_1}{\phi_1^2}}{\frac{1}{\phi_1^2}+1}=\frac{\frac{1}{\phi_1}}{1+\frac{1}{\phi_1^2}}    
+    \]
+    Note that $(X_t)$ is stationary and $\expect{X_t}=0$, and also $(X_t')$ is stationary and $\expect{X_t'}=0$. Can we state state that
+    \[
+        Var(X_t)\stackrel{?}{=}Var(X_t')  
+    \]
+    Start by noting that
+    \[
+        \gamma_X(0)=\sigma^2(1+\phi_1^2)\ne\gamma_{X'}(0)=\sigma^2(1+\frac{1}{\phi_1^2})
+    \]
+    that are clearly different; by we can try to work on this a bit. Introduce a new time series $X_t''=W_t'+\frac{1}{\phi_1}W_{t-1}'$ with $(W_t)\sim\mathcal{WN}(0,\sigma^2)$. In order to have
+    \[
+        Var(X_t)=\sigma^2(1+\phi_1^2)=(\sigma')^2(1+\frac{1}{\phi_1^2})=Var(X_t'')    
+    \]
+    some algebra shows us that $(\sigma')^2=\sigma^2\phi_1^2$. So the function $\rho(h)$ is the ACF of $X_t$ and $X_t''$, so there is not a unique model for the ACF, and this is a problem: if we estimate the model from the data, which one we have to chose? Consider the model A:
+    \[
+        X_t=W_t+\phi_1W_{t-1}  
+    \]
+    we recover that
+    \begin{equation*}
+        \begin{split}
+            W_t&=X_t-\phi_1W_{t-1}\\
+            &=X_t-\phi_1(X_{t-1}-\phi_1W_{t-2})\\
+            &=X_t-\phi_{t-1}+\phi_1^2{W_{t-2}}\\
+            &...\\
+            &=\sum_{j=0}^{n-1}(-\phi_1)^jX_{t-j}+(-\phi_1)^nW_{t-n}\\
+        \end{split}
+    \end{equation*}
+    If $\abs{\phi_1}<\infty$ then $\sum_{j\ge0}\abs{(\phi_1)^j}<\infty$. We might then consider
+    \[
+        \lim_n\sum_{j=0}^{n-1}(-\phi_1)^jX_{t-j}+\lim_n(-\phi_1)^nW_{t-n}=\Phi(B)X_t
+    \]
+    with $\Phi(Z)=\sum_{j\ge0}(-\phi_1)^jZ^j$. Thus $W_t=\Phi(B)X_t$. Consider now the series B:
+    \[
+        X_t''=W_t'+\frac{1}{\phi_1}W_{t-1}'  
+    \]
+    Applying the same arguments:
+    \[
+        W_t'=\sum_{j=0}^{n-1}\left(-\frac{1}{\phi_1}\right)^jX_{t-j}''+\left(-\frac{1}{\phi_1}\right)^nW_{t-n}'
+    \]
+    If $\abs{\phi_1}>1$ then $\abs{\frac{1}{\phi_1}}<1$, so $\sum_{j\ge0}\abs{\left(-\frac{1}{\phi_1}\right)^j}<\infty$. Studying the limit:
+    \[
+        \lim_n\sum_{j=0}^{n-1}\left(-\frac{1}{\phi_1}\right)^jX_{t-j}''+\lim_n\left(-\frac{1}{\phi_1}\right)^nW_{t-n}'=\tilde{\Phi}(B)X_t'' 
+    \]
+    with $\tilde{\Phi}(Z)=\sum_{j\ge0}\left(-\frac{1}{\phi_1}\right)^jZ^j$. Therefore for $\abs{\phi_1}<1$ then $(W_t)$ is perfectly predictable from $(X_s)$ for $s\le t$, so $(X_t)$ is invertible. If $\abs{\phi_1}>1$ this is no longer true, and we have proved that there exists a different model $(X_t'')$ which is invertible having the same statistical features of $(X_t)$ up to the second order. But why the first case is better than the second? Why is better to work with $\abs{\phi_1}<1$? The answer is the following:
+    \begin{itemize}
+        \item if $\abs{\phi_1}<1$ the most recent observations have higher weight than the mode distant ones;
+        \item if $\abs{\phi_1}=1$ all observations have the same weight;
+        \item if $\abs{\phi_1}>1$ the more distant observations have proportionally more influence.
+    \end{itemize}
+    That is why it is better to work with invertible time series.
+\end{example}
+
+Before continuing, rememtber some properties of the Laurent power series $\sum_{j\in\Z}\psi_jz^j$. Suppose:
+\begin{itemize}
+    \item $\alpha(Z)=\sum_{j\in\Z}\alpha_jZ^j$ such that $\sum_{j\in\Z}\abs{\alpha_j}<\infty$
+    \item $\beta(Z)=\sum_{j\in\Z}\beta^j$ such that $\sum_{j\in\Z}\abs{\beta}<\infty$
+\end{itemize}
+then
+\[
+    \psi(Z)=\alpha(Z)\beta(Z)=\sum_{j\in\Z}\psi_jZ^j  
+\]
+with $\psi_j=\sum_{k\in\Z}\alpha_k\beta_{j-k}=\sum_{k\in\Z}\beta_k\alpha_{j-k},\ \forall j\in\Z$. The set $\set{\psi_j}$ is the convolution of $\set{\alpha_j},\set{\beta_j}$ and is noted as $\set{\psi_j}=\set{\alpha_j}*\set{\beta_j}$. When exists, the multiplicative inverse of $\alpha(Z)$ is $\beta(Z)$ such that
+\[
+    \alpha(Z)\beta(Z)=\beta(Z)\alpha(Z)=1  
+\]
+and is can be notated as $\beta(Z)=\alpha^{-1}(Z)$. We might apply this rules to the operations in between operators:
+\[
+    \psi(B)=\alpha(B)\beta(B)\implies\psi(B)=\sum_{j\in\Z}\psi_jB^j  
+\]
+with B the backshift operator. In this case $\psi_j$ stands for $\set{\psi_j}=\set{\alpha_j}*\set{\beta_j}$. Then $\alpha^1(B)$ is such that $\alpha^{-1}(B)\alpha(B)=\alpha(B)\alpha^{-1}(B)=1$.
+
+\begin{example}
+    Consider $(X_t)\sim MA(\infty)$, then $X_t=\phi(B)W_t$ with $\phi(B)=1+\phi_1B$. Recover $(W_t)$ from $(X_t)$. Consider $\phi(Z)=1+\phi_1Z$. If $\abs{\phi_1}<1$ then $\phi^{-1}=\frac{1}{1+\phi_1Z}=\sum_{j\ge0}(-\phi_1)^jZ^j$. The multiplicative inverse of $\phi(B)$ is $\phi^{-1}(B)$ such that $\phi^{-1}(B)=\sum_{j\ge0}(-\phi_1)^jB^J$. Consider now that $X_t=\phi(B)W_t$ implies that $\phi^{-1}(B)X_t=\phi^{-1}(B)\phi(B)W_t=W_t=\phi^{-1}(B)X_t=\sum_{j\ge0}(-\phi_1)^jX_{t-j}$.
+\end{example}
+
+\begin{definition}
+    A linear time series $(X_t)$ such that $X_t=\psi(B)W_t$ is \textbf{invertible} if $\exists\psi^{-1}(Z)$
+    \[
+        \psi^{-1}(Z)=\sum_{j\in\Z}\psi_j'Z^j
+    \]
+    such that $\sum_{j\in\Z}\abs{\psi_j'}<\infty$.
+\end{definition}
+
+A widely used stochastic process is the \textbf{autoregressive time series} (AR(p)), in which the current value of the process is expressed as a finite linear aggregate of previous values of the process plus a random shock.
+
+\begin{definition}
+    A time series $(X_t)\sim AR(p)$ is a stationary solution of
+    \[
+        X_t=\theta_1X_{t-1}+...+\theta_pX_{t-p}+W_t  
+    \]
+    where $(W_t)\sim\mathcal{WN}(0,\sigma^2),\ p\in\N,\ \theta_1,...,\theta_p\in\R$ and $\theta_p\ne0$.
+\end{definition}
+
+\begin{example}
+    An example of a non-stationary solution of autoregression: consider $p=1$ and a random walk $X_t=X_{t-1}+W_t$; this stochastic process is a solution to the autoregression ($\theta_1=1$) but is not stationary, since it is a random walk.
+\end{example}
+
+If we define the autoregressive polinomial
+\[
+    \theta(Z)=1-\theta_1Z+...-\theta_pZ^p  
+\]
+then we can use the notation
+\[
+    X_t=\theta_1X_{t-1}+...+\theta_pX_{t-p}+W_t\implies\theta(B)X_t=W_t
+\]
+We assume that $\expect{X_t}=0\ \forall t\in\Z$ since $\expect{X_t}=\mu\ne0\implies Y_t=X_t-\mu$ leading to
+\begin{equation*}
+    \begin{split}
+        X_t&=\mu+\theta_1(X_{t-1}-\mu)+...+\theta_p(X_{t-p}-\mu)+W_t\\
+        &=(\mu+\theta_1\mu+...+\theta_p\mu)+\theta_1X_{t-1}+...+\theta_pX_{t-p}+W_t\\
+        &=a+\theta_1X_{t-1}+...+\theta_pX_{t-p}+W_t\\
+    \end{split}
+\end{equation*}
+with our assumption, $a=0$.
+
+\begin{remark}
+    Suppose $p=1,\ (X_t)\sim AR(p)$ with initial condition $X_0$ such that $cov(X_0,W_t)=0\ \forall t\in\Z$. We have that
+    \[
+        X_1=\theta_1X_0+W_1,\ X_2=\theta_1X_1+W_2=\theta_1^2X_0+\theta_1W_1+W_2  
+    \]
+    in general:
+    \[
+        X_n=\theta_1^nX_0+\theta_1^{n-1}W_1+...+\theta_1W_{n-1}+W_n 
+    \]
+    So:
+    \[
+        \expect{X_n}=\theta_1^n\expect{X_0}\Leftarrow\expect{X_0}=0,\ \expect{X_n}=0\ \ \ n=1,2,3...  
+    \]
+    Now let us evaluate the variance:
+    \begin{equation*}
+        \begin{split}
+            Var(X_n)&=\theta_1^nVar(X_0)+\theta_1^{n-1}Var(W_1)+...+Var(W_n)\\
+            &=\theta_1^nVar(X_0)+\sigma^2(1+\theta_1+...+\theta_1^{n-1})\\  
+        \end{split}
+    \end{equation*}
+    As you can see the variance depends on n, so $(X_n)$ is not stationary. Also if we ask $Var(X_0)=0$ the other term of the equation is different from zero.
+\end{remark}
+
+Let us consider the $AR(1)$ model $X_t=\theta_1X_{t-1}+W_t$ with $\theta_1\ne0,1$. Apply the substitution $X_{t-1}=\theta_1X_{t-2}+W_{t-1}$ iteratively:
+\[
+    X_t=\theta_1^nX_{t-n}+\sum_{j=0}^{n-1}\theta_1^jW{t-j}  
+\]
+If $\abs{\theta_1}<1$ then $\sum_{j\ge0}\abs{\theta_1}^j<\infty$. Also, $(W_t)$ is $\el{2}$ bounded since
+\begin{equation*}
+    \begin{split}
+        X_t&=\lim_{n}\sum_{j=0}^{n-1}\theta_1^jW_{t-j}+\lim_n\theta_1^nX_{t-n}\\
+        &=\sum_{j\ge0}\theta_1^jW_{t-j}\Leftarrow MA(\infty)\\
+    \end{split}
+\end{equation*}
+So $(X_t)$ is causal and its ACF is
+\[
+    \gamma_X(h)=\sigma^2\sum_{j\ge0}\theta_1^j\theta_1^{j+\abs{h}}=\sigma^2\theta_1^{\abs{h}}\sum_{j\ge0}(\theta_1^2)^j=\sigma^2\theta_1^{\abs{h}}\frac{1}{1-\phi_1^2}  
+\]
+which tends to $0$ as $h\to\infty$, so $(X_t)$ has the mean ergodicity property. This is the expression of the ACF of an AR(1) when $\abs{\theta_1}<1$. Moreover, $(X_t)$ is the only solution of the different equation since it is the limit in almost sure convergence of the partial sums. It is also the limit in $\el{2}$ convergence of a filtering of white noise.
+
+\begin{proposition}
+    $X_t=\theta^{-1}(B)W_t$ with $\theta^{-1}(Z)$ such that
+    \[
+        \theta^{-1}(Z)\theta(Z)=\theta(Z)\theta^{-1}(Z)=1  
+    \]
+\end{proposition}
+
+\begin{proof}
+    Consider the autoregressive polinomial
+    \[
+        \theta(Z)=1-\theta_1Z\implies\theta^{-1}(Z)=\frac{1}{1-\phi_1Z}\ \ \ z\ne\frac{1}{\phi_1} 
+    \]
+    If $\abs{\theta_1Z}<1$ then we can state that
+    \[
+        \theta^{-1}(Z)=\sum_{j\ge0}(\theta_1Z)^j  
+    \]
+    Thus $\theta^{-1}(B)W_t=\sum_{j\ge0}\theta_1^jB^jW_t=\sum_{j\ge0}\theta_1^jW_{t-j}=X_t$.
+\end{proof}
+
+\begin{remark}
+    If $\abs{\theta_1}<1$ then $\frac{1}{\abs{\theta_1}}>1$, then the root of $\theta(Z)(Z_0=\frac{1}{\phi_1})$ is out of the interval $(-1,1)$.
+\end{remark}
+
+What happens if $\abs{\theta_1}>1$? The theorems we have seen would not hold anymore; would there be nonetheless solutions to the difference equation that are stationary? Let us consider the difference equation
+\[
+    X_{t+1}=\theta_1X_t+W_{t+1}\implies X_t=\frac{1}{\theta_1}X_{t+1}-\frac{1}{\theta_1}W_{t+1}  
+\]
+Applying iteratively the substitution $X_{t+1}=\frac{1}{\theta_1}X_{t+2}-\frac{1}{\theta_1}W_{t+2}$ we obtain that
+\[
+    X_t=\frac{1}{\theta_1^n}X_{t+n}-\sum_{j=1}^n\frac{1}{\theta_1^j}W_{t-j}  
+\]
+As $\abs{\frac{1}{\theta_1}}<1$ then $\sum_{j\ge1}\abs{\frac{1}{\theta_1}}^j<\infty$ and $(W_t)\in\el{2}$-bounded we can consider the limit
+\[
+      X_t=\lim_n\frac{1}{\theta_1^n}X_{t+n}-\lim_n\sum_{j=1}^n\frac{1}{\theta_1^j}W_{t-j}=-\sum_{j\ge1}\sum_{j=1}^n\frac{1}{\theta_1^j}W_{t-j}
+\]
+Then $(X_t)$ has this representation as a linear filter of $(W_t)$; it is also stationary, but it is not causal because in this case it depends on the future.
+
+\begin{exercise}
+    If $\abs{\theta_1}>1$ find the ACF of $(X_t)\sim AR(1)$.
+\end{exercise}
+
+\begin{exercise}
+    If $\abs{\theta_1}<1$ prove that
+    \[
+        X_t=\theta^{-1}(B)W_t  
+    \]
+    is the solutin of $X_t=\theta_1X_{t-1}+W_t$. If $\abs{\theta_1}>1$ find the solution of $X_t=\theta_1X_{t-1}+W_t$ in terms of B backshift operator and check that $X_t$ is the solution of $X_t=\theta_1X_{t-1}+W_t$.
+\end{exercise}

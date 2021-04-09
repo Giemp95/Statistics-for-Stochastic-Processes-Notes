@@ -1,0 +1,451 @@
+\section{Lecture 11}
+\label{lecture11}
+
+\begin{center}
+    \textbf{Simulation and analysis of AR(1) models. Multivariate representation of AR(p) model and causality. Yule-Walker's equations for the covariance function of AR(p) models. Case study: p=2. Simulation and analysis of AR(2) models. Introduction to ARMA models.}
+\end{center}
+
+Suppose to recover an estimation of the parameter $\abs{\theta_1}>1$ from the data. Using a suitable update of the data is possible to use the model
+\[
+    X_t=\frac{1}{\theta_1}X_{t-1}+W_t'\ \ \  \forall t\in\Z
+\]
+?
+
+\begin{exercise}
+    Suppose $\abs{\theta_1}>1$. Define
+    \[
+        W_t'=X_t-\frac{1}{\theta_1}X_{t-1}
+    \]
+    Show that $(W_t')\sim\mathcal{WN}(0,\sigma_W^2)$ and express $\sigma_W^2$ in terms of $\sigma^2$ and $\theta_1$.
+\end{exercise}
+
+ \begin{example}
+    Simulate a path for the following $AR(1)$ models:
+    \begin{itemize}
+        \item $X_t=0.9X_{t-1}+W_t$
+        \item $X_t=0.4X_{t-1}+W_t$
+        \item $X_t=-0.9X_{t-1}+W_t$
+    \end{itemize}
+    with $(W_t)\sim\mathcal{GWN}(0,1)$, $n=200$ and $seed=154$. Comment the resutls.
+    \begin{verbatim}
+####################################
+# Simulation of AR(1) paths
+####################################
+
+# simulation of AR(0.9), AR(0.4), AR(-0.9)
+set.seed(154)
+ar.0.9=arima.sim(list(ar=0.9),200)
+ar.0.4=arima.sim(list(ar=c(0.4)),200)
+ar.m0.9=arima.sim(list(ar=c(-0.9)),200)
+
+# plot the paths
+windows()
+par(mfrow=c(3,1))
+plot(ar.0.9,type='o',main='AR(0.9)',ylim=c(-6,6))
+abline(h=0,col='red')
+plot(ar.0.4,type='o',main='AR(0.4)',ylim=c(-6,6))
+abline(h=0,col='red')
+plot(ar.m0.9,type='o',main='AR(-0.9)',ylim=c(-6,6))
+abline(h=0,col='red')
+
+# plot ACF
+windows()
+par(mfrow=c(1,3))
+acf(ar.0.9, main='AR(0.9)',ylim=c(-1,1))
+acf(ar.0.4, main='AR(0.4)',ylim=c(-1,1))
+acf(ar.m0.9, main='AR(-0.9)',ylim=c(-1,1))
+
+# plot lag.plot
+graphics.off()
+windows()
+lag.plot(ar.0.9,9,main='AR(0.9)')
+windows()
+lag.plot(ar.m0.9,9,main='AR(-0.9)')
+
+#
+# adf test (augmented Dickey-Fuller test) in the library tseries
+#
+library(tseries)
+adf.test(ar.0.9,k=0)
+adf.test(ar.0.4,k=0)
+adf.test(ar.m0.9,k=0)
+    \end{verbatim}
+ \end{example}
+
+ The \textbf{augmented Dickey-Fuller (ADF) test} tests the null hypothesis that the autoregressive polynomial has a unit root. If $k=1$ the null hypothesis is that the time series is a random walk with zero drift, and the alternative hypothesis is that the series is a $AR(1)$ with $\abs{\theta_1}<1$; otherwise, the test refers to a $AR(p)$ with the null hypothesis that 1 is a root of the autoregressive polynomial ($1=\hat{\theta_1}+...+\hat{\theta_p}$).
+
+ What about the autoregressive models of order p greater than one? We will see that if $(X_t)\sim AR(p)$ then it has a causal representation if and only if $\theta(Z)\ne0\ \forall Z\in\mathbb{C}$ such that $\abs{Z}\le1$.
+
+ \begin{proof}
+    Consider $p=3$ and the different equation $X_t=\theta_1X_{t-1}+\theta_2X_{t-2}+\theta_3X_{t-3}+W_t$. Suppose to add two more equations to this one:
+    \[
+        \begin{cases}
+            X_t=\theta_1X_{t-1}+\theta_2X_{t-2}+\theta_3X_{t-3}+W_t\\
+            X_{t-1}=X_{t-1}\\
+            X_{t-2}=X_{t-2}\\
+        \end{cases}  
+    \]
+    This can be rewritten in matrix notation:
+    \[
+        \begin{pmatrix}
+            X_t\\
+            X_{t-1}\\
+            X_{t-2}\\
+        \end{pmatrix}
+        =
+        \begin{pmatrix}
+            \theta_1&\theta_2&\theta_3\\
+            1&0&0\\
+            0&1&0\\
+        \end{pmatrix}
+        \begin{pmatrix}
+            X_{t-1}\\
+            X_{t-2}\\
+            X_{t-3}\\
+        \end{pmatrix}
+        +
+        \begin{pmatrix}
+            X_t\\
+            0\\
+            0\\
+        \end{pmatrix}
+    \]
+    In general:
+    \begin{itemize}
+        \item $\boldsymbol{x}_{t,p}=(X_t,...,X_{t-p+1})$
+        \item $\boldsymbol{w}_{t,p}=(W_t,0,...,0)$
+        \item $\boldsymbol{A}_{p\times p}=
+        \begin{pmatrix}
+            \begin{array}{ccc|c}
+                \theta_1&...&\theta_{p-1}&\theta_p
+            \end{array}\\
+            \hline
+            \begin{array}{ccc|c}
+                &\boldsymbol{I}_{p-1}&\ \ \ \ &0
+            \end{array}\\
+        \end{pmatrix}$
+    \end{itemize}
+    Then the following set of equations can be written as
+    \[
+        \begin{cases}
+            X_t=\theta_1X_{t-1}+...+\theta_pX_{t-p}+W_t\\
+            X_{t-1}=X_{t-1}\\
+            ...\\
+            X_{t-p+1}=X_{t-p+1}\\
+        \end{cases}
+        \implies
+        \boldsymbol{x}_{t,p}^\intercal=\boldsymbol{A}\boldsymbol{x}_{t-1,p}^\intercal+\boldsymbol{w}_{t,p}^\intercal  
+    \]
+    Note that $det(\boldsymbol{I}_{p}-Z\boldsymbol{A})=\theta(Z)$ (check as exercise for p=3) and $P_{\boldsymbol{A}}(Z)=det(Z\boldsymbol{I}_p-\boldsymbol{A})$. Observe that $z_0=0$ is such that $\theta(z_0)\ne0\Leftarrow\theta(0)=1$. So we can rewrite the autoregressive polynomial as
+    \[
+        \theta(Z)=det(\boldsymbol{I}_p-Z\boldsymbol{A})=Z^pdet\left(\frac{1}{Z}\boldsymbol{I}_p-\boldsymbol{A}\right)=Z^pP_{\boldsymbol{A}}\left(\frac{1}{Z}\right)
+    \]
+    substituting $Z$ with $\frac{1}{Z}$:
+    \[
+        \theta\left(\frac{1}{Z}\right)=\frac{1}{Z^p}P_{\boldsymbol{A}}(Z)  
+    \]
+    This implies that the eigenvalues of $\boldsymbol{A}$ are equal to the inverse of the roots of $\theta(Z)$. Now consider to iterate the difference equation $n$ times:
+    \begin{equation*}
+        \begin{split}
+            \boldsymbol{x}_{t,p}^\intercal&=\boldsymbol{A}\boldsymbol{x}_{t-1,p}^\intercal+\boldsymbol{w}_{t,p}^\intercal\\
+            &=\boldsymbol{A}(\boldsymbol{A}\boldsymbol{x}_{t-2,p}^\intercal+\boldsymbol{w}_{t-1,p}^\intercal)+\boldsymbol{w}_{t,p}^\intercal\\
+            &=\boldsymbol{A}^2\boldsymbol{x}_{t-2,p}^\intercal+\boldsymbol{A}\boldsymbol{w}_{t-1}^\intercal+\boldsymbol{w}_{t,p}^\intercal\\
+            &...\\
+            &=\boldsymbol{A}^n\boldsymbol{x}_{t-n,p}^\intercal+\sum_{j=0}^{n-1}\boldsymbol{A}^j\boldsymbol{w}_{t-j,p}^\intercal\\
+        \end{split}
+    \end{equation*}
+    For $n\to\infty$ this expression depends on the eigenvalues of $\boldsymbol{A}$. In particular, if we set
+    \[
+        \tilde{\rho}(\boldsymbol{A})=\max\set{\abs{\lambda_1},...,\abs{\lambda_p}}  
+    \]
+    then it is possible to prove that the spectral radius ($\tilde{\rho}$) of $\boldsymbol{A}$ is $<1$ if and only if $\lim_n\boldsymbol{A}^n=0$. In this case it is possible to prove that
+    \[
+        \lim_{n\to\infty}\sum_{j=0}^{n-1}\boldsymbol{A}^j\boldsymbol{w}_{t-j,p}^\intercal=\boldsymbol{x}_{t,p}^\intercal  
+    \]
+    is well defined. So in this case the vector admits a causal representation; this is true only when
+    \[
+        \tilde{\rho}(\boldsymbol{A})<1\iff\abs{\lambda_1},...,\abs{\lambda_p}<1\iff\frac{1}{\abs{\lambda_1}},...,\frac{1}{\abs{\lambda_p}}>1  
+    \]
+    but among these inverses there are the roots of $theta(Z)$, but this is the statement from which we have started.
+\end{proof}
+
+But what about the ACF of $AR(p)$?
+
+\begin{theorem}
+    If $(X_t)\sim AR(p)$, then
+    \[
+        \gamma_X(h)-\theta_1\gamma_X(h-1)+...-\theta_p\gamma_X(h-p)=
+        \begin{cases}
+            \sigma^2&h\ne0\\
+            0&h=0\\
+        \end{cases}  
+    \]
+\end{theorem}
+
+\begin{proof}
+    Consider $(X_t)\sim AR(p)$. Then
+    \begin{equation*}
+        \begin{split}
+            X_t-\theta_1X_{t-1}+...-\theta_pX_{t-p}&=W_t\\
+            \expect{X_tX_{t-h}}-\theta_1\expect{X_{t-1}X_{t-h}}+...-\theta_p\expect{X_{t-p}X_{t-h}}&=\expect{W_tX_{t-h}}\\
+            \gamma_X(h)-\theta_1\gamma_X(h-1)+...-\theta_p\gamma_X(h-p)=?
+        \end{split}
+    \end{equation*}
+    In order to find the missing result, observe that $X_{t-h}$ depends on
+    \[
+        X_{t-h-1},X_{t-h-2},...,X_{t-h-p},W_{t-h}  
+    \]
+    in which we have the contribution respectively of
+    \[
+        W_{t-h-1},W_{t-h-2},...,W_{t-h-p}  
+    \]
+    but these values are in the past when $h\ne0$, so $X_{t-h},W_t$ are uncorrelated when $h\ne0$. In case $h=0$:
+    \[
+        W_tX_t=\theta_1W_tX_{t-1}+...+\theta_pW_tX_{t-p}+W_t^2  
+    \]
+    taking the expectation of this, we found that only contribution of this is given by $W_t^2$, since all the other shocks are in the past. We find that
+    \[
+        \expect{W_tX_{t-h}}=
+        \begin{cases}
+            \sigma^2&h=0\\
+            0&h\ne0\\
+        \end{cases}  
+    \]
+    substituting this result in the previous equation, we retrieve the Yule-Walker's equation, completing the proof.
+\end{proof}
+
+The \textbf{Yule-Walker's equations} are special cases of homogeneous linear difference equations  with constant coefficients:
+\[
+f(h)-\alpha_1f(h-1)+...-\alpha_pf(h-p)=0  
+\]
+with $h\ne0$ and $\alpha_1,...,\alpha_p\in\R$.
+
+\begin{example}
+    If $\xi_1,...,\xi_p\in\R$ are roots of $\theta(Z)$ with $\xi_1\ne...\ne\xi_p$ then
+    \[
+          \gamma_X(h)=b_1\xi_1^{-h}+...+b_p\xi_p^{-h}
+    \]
+    with $b_1,...,b_p$ constants depending on initial conditions.
+\end{example}
+
+\begin{example}
+    Consider the Yule-Walker's equation with $p=2$:
+    \[
+        \gamma_X(h)=\theta_1\gamma_X(h-1)+\theta_2\gamma_X(h-2)  
+    \]
+    with $h\ge1$. Dividing every member of the equation by $\gamma_X(0)$ and considering the initial condition $\gamma_X(0)=1$ we obtain the following system:
+    \[
+        \begin{cases}
+            \rho_X(h)=\theta_1\rho_X(h-1)+\theta_2\rho_X(h-2)\\
+            \rho_X(0)=1\\
+        \end{cases}  
+    \]
+    Suppose $\xi_1,\xi_2$ be the roots of the autoregressive polynomial $\theta(Z)=1-\theta_1Z-\theta_2Z^2=\left(1-\frac{Z}{\xi_1}\right)\left(1-\frac{Z}{\xi_2}\right)$. Suppose also that $\abs{\xi_1},\abs{\xi_2}>1$ (this hypotesis implies that $(X_t)$ is causal). Then
+    \begin{itemize}
+        \item if $\xi_1\ne\xi_2\in\R$ then $\rho_X(h)=b_1\xi_1^{-h}+b_2\xi_2^{-h}$ with $b_1,b_2$ depending on initial conditions, since
+            \[
+                \begin{cases}
+                    h=0&\rho_X(0)=1\implies b_1+b_2=1\\
+                    h=1&\rho_X(1)=\theta_1\rho_X(0)+\theta_2\rho_X(-1)\iff\rho_X(-1)=\rho_X(1)=\frac{\theta_1}{1-\theta_2}=\frac{b_1}{\xi_1}+\frac{b_2}{\xi_2}
+                \end{cases}  
+            \]
+            So we can find $b_1\ and\ b_2$ by solving the system
+            \[
+                \begin{cases}
+                    b_1+b_2=1\\
+                    \frac{b_1}{\xi_1}+\frac{b_2}{\xi_2}=\frac{\theta_1}{1-\theta_2}
+                \end{cases}  
+            \]
+            This is left as exercise.
+        \item if $\xi_1=\xi_2\in\R$ then $\rho_X(h)=\xi_1^{-h}(b_{10}h^0+b_{11}h^1)=\xi_1^{-h}(b_{10}+b_{11}h^1)$. To find the constant we have to solve:
+            \[
+                \begin{cases}
+                    b_{10}+b_{11}=1\\
+                    \xi_1^{-1}(b_{10}+b_{11})=\frac{\theta_1}{1-\theta_2}\\
+                \end{cases}  
+            \]
+    \end{itemize}
+    In both cases, for $h\to\infty\implies\rho_X(h)=0$. In reality, there is one more case:
+    \begin{itemize}
+        \item if $\xi_1=\bar{\xi}_2\in\C$ then $\xi_1=de^{-i\tilde{\theta}}, \xi_2=de^{i\tilde{\theta}}$ with $\tilde{\theta}\in(0,2\pi)$. In this case we have that
+            \[
+                \rho_X(h)=b_1d^{-h}e^{i\tilde{\theta}h}+b_2d^{-h}e^{-i\tilde{\theta}h}  
+            \]
+            with $b_1=ae^{ib},b_2=ae^{-ib}$. After some algebra we find that
+            \[
+                \rho_X(h)=2ad^{-h}\cos(b+\tilde{\theta}h)  
+            \]
+            which goes to zero as $h\to\infty$.
+    \end{itemize}
+\end{example}
+
+\begin{remark}
+    $\theta_2\ne1$. Suppose $\theta_2=1$, then $\rho_X(1)=\theta_1\rho_X(0)+\theta_2\rho_X(1)\implies\theta_1=0\implies\theta(Z)=1-Z^2$, but in this case it does not exist a stationary solution. This will be demonstrated in the next lecture, but also the following exercise will help in understanding this.
+\end{remark}
+
+\begin{exercise}
+    Suppose $(X_t)=AR(2)$.
+    \begin{enumerate}
+        \item prove that $\theta(Z)\ne0\ \forall Z\in\C$ such that $\abs{Z}\le1$ if $\theta_1+\theta_2<1, \theta_2-\theta_1<1,\abs{\theta_2}<1$.
+        \item find a causal representation of $(X_t)$ when $\theta(Z)\ne0\ \forall Z\in\C such that \abs{Z}\le1$.
+    \end{enumerate}
+\end{exercise}
+
+\begin{example}
+    \begin{enumerate}
+        \item Find $\theta(Z)=1-\theta_1Z-\theta_2Z^2$ such that $\xi_1=-1.5$ and $\xi_2=2$ are roots of $\theta(Z)$;
+        \item Simulate a path of $(X_t)\sim AR(2)$ with $\theta(Z)$ given in 1. (seed=154,n=20) and plot the correlation function;
+        \item Check if $(X_t)$ has a causal representation:
+        \begin{enumerate}
+            \item $X_t=-1.9X_{t-1}+0.88X_{t-2}+W_t$
+            \item $X_t=X_{t-1}-0.25X_{t-2}+W_t$
+            \item $X_t=1.5X_{t-1}-0.75X_{t-2}+W_t$
+        \end{enumerate}
+        Plot the correlation functions and comment the results.
+        \item Check if 1 is a root of $\theta(Z)$ for $(X_t)$ in 3.a, 3.b, 3.c using the ADF test.
+    \end{enumerate}
+
+    \begin{verbatim}
+####################################
+# Exercise on AR(p)
+####################################
+
+# to work with polynomials
+install.packages('polynom')
+library(polynom)
+
+# a)
+# construct a polynomial from its roots
+(c1=coef(poly.from.roots(c(-1.5, 2))))
+(polynomial(c1))
+
+# for the autoregressive polynomial 1 - theta1 x - theta2 x^2
+# normalize with the constant term c1[1]
+(c2=c1/c1[1])
+
+# update the polynomial
+(p=polynomial(c2))
+
+# check the roots
+(pz=solve(p))
+
+# test on the coefficients theta1 and theta2
+(coeffAR2=coef(p))
+(theta1=-coeffAR2[2])
+(theta2=-coeffAR2[3])
+theta1+theta2; theta2-theta1; abs(theta2)
+
+# b)
+# simulate the corresponding AR(2)
+set.seed(154)
+ar.sim1=arima.sim(list(ar=c(theta1,theta2)),200)
+windows()
+plot(ar.sim1,type='o',main='AR(2): roots -1.5 and 2',ylim=c(-6,6))
+abline(h=0,col='red')
+windows()
+acf(ar.sim1, lag.max=50, main='AR(2) roots -1.5 and 2',ylim=c(-1,1))
+
+# c.1)
+# find the roots of the AR(2) polynomial: 1 + 1.9 z - 0.88 z^2
+# CAR is the vector with coefficients
+CAR=c(1,1.9,-0.88)
+
+# check
+(p=polynomial(CAR))
+
+# find the roots
+(roots=solve(p))
+
+# test on the coefficients theta1 and theta2: extract the coefficients
+(coeffAR2=coef(p))
+(theta1=-coeffAR2[2])
+(theta2=-coeffAR2[3])
+theta1+theta2; theta2-theta1; abs(theta2)
+
+# simulate the AR(2)?
+ar.sim2=arima.sim(list(ar=c(1.9,-0.88)),200)
+
+# c.2)
+# simulation of AR(2) with polynomial: 1 - z + 0.25 z^2
+# check the roots
+p=polynomial(c(1,-1.0,0.25))
+(roots=solve(p))
+
+# test on the coefficients theta1 and theta2
+(coeffAR2=coef(p))
+(theta1=-coeffAR2[2])
+(theta2=-coeffAR2[3])
+theta1+theta2; theta2-theta1; abs(theta2)
+
+# simulate the AR(2)
+ar.sim2=arima.sim(list(ar=c(1,-0.25)),200)
+windows()
+plot(ar.sim2,type='o',main='AR(2): roots 2 and 2',ylim=c(-6,6))
+abline(h=0,col='red')
+
+# ACF
+windows()
+acf(ar.sim2, lag.max=50, main='AR(2): roots 2 and 2',ylim=c(-1,1))
+
+# c.3)
+# simulation of AR(2) with polynomial: 1 - 1.5 z + 0.75 z^2
+# check the roots
+(p=polynomial(c(1,-1.5,0.75)))
+(roots=solve(p))
+abs(roots)
+
+# test on the coefficients theta1 and theta2
+(coeffAR2=coef(p))
+(theta1=-coeffAR2[2])
+(theta2=-coeffAR2[3])
+theta1+theta2; theta2-theta1; abs(theta2)
+
+# simulate the AR(2)
+ar.sim3=arima.sim(list(ar=c(1.5,-0.75)),200)windows()
+plot(ar.sim3,type='o',main='AR(2): complex conjugate roots',ylim=c(-6,6))
+abline(h=0,col='red')
+
+# ACF
+windows()
+acf(ar.sim3, lag.max=50, main='AR(2): complex conjugate roots',ylim=c(-1,1))
+
+# plot ACF
+windows()
+par(mfrow=c(1,3))
+acf(ar.sim1, main='AR(2): different roots',ylim=c(-1,1))
+acf(ar.sim2, main='AR(2): equal roots',ylim=c(-1,1))
+acf(ar.sim3, main='AR(2): complex conjugate roots',ylim=c(-1,1))
+
+# d)
+# adf test (augmented Dickey-Fuller test)
+#
+library(tseries)
+adf.test(ar.sim2)
+adf.test(ar.sim3)
+    \end{verbatim}
+\end{example}
+
+\begin{definition}
+    $(X_t)\sim \textbf{ARMA(p,q)}$ is a stationary solution to the difference equation
+    \[
+        X_t-\theta_1X_{t-1}+...-\theta_pX_p=W_t+\phi_1W_{t-1}+...+\phi_qW_{t-q}  
+    \]
+    where $p,q\in\set{0,1,2,...},\ \theta_1,...\theta_p,\phi_1,...,\phi_p\in\R,\ \theta_p,\phi_p\ne0$ and $(W_t)\sim\mathcal{WN}(0,\sigma^2)$. The short notation for the previous equation is
+    \[
+          \theta(B)X_t=\phi(B)W_t
+    \]
+    where the first therm is the autoregressive polynomial and the second one the moving average polynomial. Note that
+    \begin{itemize}
+        \item when $p=0$ then $\theta(Z)=1\ (\theta_0=1)\implies ARMA(0,q)=MA(q)$
+        \item when $q=0$ then $\phi(Z)=1\ (\phi_0=1)\implies ARMA(p,0)=AR(p)$
+    \end{itemize}
+    The case $p=q=0$ is generally not considered since it reduces to the white noise. We Suppose that $\expect{X_t}=0\ \forall i\in\Z$.
+\end{definition}
+
+\begin{exercise}
+    Suppose $(X_t)\sim ARMA(2,2)$ such that
+    \[
+        X_t=2+1.3X_{t-1}-0.4X_{t-2}+W_t+W_{t-1}  
+    \]
+    Compute $\expect{X_t}$.
+\end{exercise}

@@ -1,0 +1,350 @@
+\section{Lecture 4}
+\label{lecture4}
+
+\begin{center}
+    \textbf{Generation and study in R of simulated time series. Time average and almost sure convergence for strong stationary t.s. Ergodic time series and tail sigma-algebra. The employment of the Kolmogorov law 0-1. Strong ergodic theorem. Examples and exercises}
+\end{center}
+
+We now introduce a property similar to the q-dependence, the q-correlation.
+
+\begin{definition}
+    A stationary time series $(X_t)$ is said to be \textbf{q-correlated} if
+    \[
+        \gamma(h)=0\ \ \ for\ \abs{h}>q 
+    \]
+\end{definition}
+
+\begin{example}
+    $(W_t)\sim\mathcal{WN}\implies(W_t)$ 0-correlated.
+\end{example}
+
+\begin{exercise}
+    Consider a stationary time series $(X_t)$ and $(Y_t)$ such that
+    \begin{equation*}
+        Y_t=\begin{cases}
+            X_t & t\ odd\\
+            X_{t+1} & t\ even\\
+        \end{cases}
+    \end{equation*}
+    Check if $(Y_t)$ is stationary.
+\end{exercise}
+
+\begin{proposition}
+    Consider $(W_t)\sim\mathcal{WN}(0,\sigma^2)$ and $(X_t)$ such that
+    \[
+        X_t=W_t+\phi_1W_{t-1}+...+\phi_qW_{t-q}\ \ \ t\in\Z  
+    \]
+    where $q\in\N$ and $\phi_1,...,\phi_q\in\R$. Then $(X_t)$ is weak stationary and q-correlated.
+\end{proposition}
+
+\begin{remark}
+    $(X_t)$ is a \textbf{moving average} time series of order q.
+\end{remark}
+
+\begin{proof}
+    \begin{equation*}
+        \begin{split}
+            X_t\in\el{2}\ \forall t\in\Z\ \Leftarrow&\ W_t\in\el{2}\ \forall t\in\Z\\
+            \expect{X_t}=0\ \forall t\in\Z\ \Leftarrow&\ \expect{X_t}=\sum_{j=0}^q\phi_j\expect{W_{t-j}}=0\ \ \ (\phi_0=1)
+        \end{split}
+    \end{equation*}
+    The next step would be the calculation of $cov(X_s,X_{s+h})$. This is left as an exercise, but the solution is provided:
+    \begin{equation*}
+        cov(X_s,X_{s+h})=\begin{cases}
+            0 & \abs{h}>q\\
+            \sum_{j=0}^{q-\abs{h}}\phi_j\phi_{j+\abs{h}} & \abs{h}\le q
+        \end{cases}
+    \end{equation*}
+    We observe that $(X_t)$ as a covariance function depending only on tha lag window $h$, so it is a weak statinary time series; moreover we have proved that the covariance function is 0 when $h>q$, then $(X_t)$ is a q-correlated time series. 
+\end{proof}
+
+\begin{example}
+    Simulate (plot) a path of 500 steps of a time series
+    \begin{equation*}
+        X_t=\begin{cases}
+            Z_t & t\ odd\\
+            \frac{Z_{t-1}-1}{\sqrt{2}} & t\ even\\
+        \end{cases}
+    \end{equation*}
+    where $(Z_t)\sim\mathcal{GWN}(0,1)$ (seed=100). Compare the two plots of $(X_t)$ and $(Z_t)$.
+    
+    The solution is the following:
+    \begin{verbatim}
+#######################################
+# Generation of a WN(0,1)
+#######################################
+# Generate a sample path of GWN(0,1) with seed 100
+set.seed(100)
+w=rnorm(500,0,1)
+# initialize the vector x with w
+x=w
+# change the elements in x corresponding to even steps.
+for(i in 1:250) {x[2*i]=(x[2*i-1]^2-1)/sqrt(2)}
+# set up the graphic window
+par(mar=c(2,2,2,2))
+par(mfrow=c(2,1))
+# difference between plot and plot.ts
+plot(w, main='A path of gaussian white noise')
+plot.ts(w, main='A path of gaussian white noise')
+# comparing plots
+plot.ts(x, type='o', main='A path of a white noise')
+plot.ts(w, type='o', main='A path of gaussian white noise')
+# the two plots do not have the same axes. To set the same axes:
+plot.ts(x, main='A path of white noise',ylim=range(-3,6))
+plot.ts(w, main='A path of gaussian white noise', ylim=range(-3,6))
+    \end{verbatim}
+\end{example}
+
+\begin{example}
+    Simulate a path of a random walk
+    \[
+        X_t=\mu+X_{t-1}+W_t\ \ \ t=1,...,200  
+    \]
+    with $W_t\sim\mathcal{GWN}(0,1),\ X_0=0,\ \mu=0.2$.
+    \begin{enumerate}
+        \item compare with $\mu=0$;
+        \item for $\mu=0.2$ fit the trend with a line.
+    \end{enumerate}
+    
+    The solution is the following:
+    \begin{verbatim}
+#########################################
+# Generation of paths of a random walk
+#########################################
+# Generate 200 values from N(0,1) with seed 154
+set.seed(154)
+w=rnorm(200,0,1)
+# do the cumulative summation of the 200 values
+x = cumsum(w)
+# set the times (1:200)
+times=seq(1,200,1)
+# set mu=0.2: xd <-random walk
+mu = 0.2
+xd = mu*times + x
+# set up the graphic window
+par(mar=c(2,2,2,2))
+# Do the plot
+plot.ts(xd, main='On the random walk', type='o')
+# To add the path generated from the random walk with no drift
+lines(x, col='red')
+# To estimate the trend component of xd
+fit=lm(xd~times)
+# To validate the estimation
+summary(fit)
+# To add the regression line to the plot
+(coeff=fit$coefficients)
+lines(coeff[2]*times+coeff[1], col='blue', lty="dashed")        
+    \end{verbatim}
+\end{example}
+
+Now we will explore briefly the \textbf{Ergodic theory}, which gives results on asymptotic behaviors of systems evolving over time. It can allow us to work with the classical concepts of statistics, like sample mean and sample variance, on time series.
+
+\begin{definition}
+    An \textbf{ergodic theorem} gives condition under which
+    \[
+        \mean{X}_n=\frac{1}{n}(X_1+...+X_n)
+    \]
+    converges as n becomes larger.
+\end{definition}
+In the classical framework, $\mean{X}$ is the sample mean, since all the variables are iid, while in the time series context this is not true anymore; so the value $\mean{X}$ is called \textbf{time average}. Note that also the strong law of large numbers is an ergodic theorem. Note also that stationary time series have a constant mean $\mu$. If we have more time series in the same sample space, the mean of all the sample means gives the so-called \textbf{ensemble average}.
+
+\begin{example}
+    Consider a strong stationary time series $(X_t)\implies(X_t)\sim\mathcal{ID}$ with $x_1,...,x_n\in range(X_t)$. These information are sufficient to estimate $\mu$ from $\mean{X}_n$?
+
+    Consider two coins; the first one is fair ($\prob{H}=\prob{T}=\frac{1}{2}$) and the second one is not ($\prob{H}= 1,\ \prob{T}=0$). Choose a coin randomly and then flip it infinitely times. The sample space of this experiment is $\Omega=\{Coin1,Coin2\}\times\{H,T\}^{\N}$. Now partition $\Omega=\{A,B\}$ as:
+    \begin{equation*}
+        \begin{split}
+            A&={(Coin1,\omega_1,\omega_2,...)\in\Omega}\\
+            B&={(Coin2,\omega_1,\omega_2,...)\in\Omega} = {(Coin2,H,H,H,...)}
+        \end{split}
+    \end{equation*}
+    We have that $\prob{A}=\prob{B}=\frac{1}{2}$ due to the random selection. Now consider the coordinate random variables
+    \begin{equation*}
+        X_n(\omega)=\begin{cases}
+            1 & \text{if the n-th toss gives head}\\
+            0 & \text{if the n-th toss gives tail}\\
+        \end{cases}
+    \end{equation*}
+    with $\omega\in\Omega$. Let us study this sequence of random variables.
+
+    First of all, $(X_n)\sim\mathcal{ID}$, since 
+    \begin{equation*}
+        \begin{split}
+            \prob{X_n=1}&=\prob{X_n=1|A}\prob{A}+\prob{X_n=1|B}\prob{B}=\frac{3}{4}\\
+            \prob{X_n=0}&=1-\prob{X_n=1}=\frac{1}{4}
+        \end{split}
+    \end{equation*}
+    As you can see, these distributions do not depend on $n$, so all the random variables $X_n$ have the same distribution; in particular, the mean is
+    \[
+        \expect{X_n}=1\frac{3}{4}+0\frac{1}{4}=\frac{3}{4}
+    \]
+    
+    The random variables $(X_n)$ are not independent: indeed, if
+    \begin{equation*}
+        X_n=\begin{cases}
+            \mathcal{B}e(1) & \text{if B is selected}\\
+            \mathcal{B}e(\frac{1}{2}) & \text{if A is selected}\\
+        \end{cases}
+        \implies X_n\sim\mathcal{B}e(P)
+    \end{equation*}
+    with $P$ random variable such that $\prob{P=1}=\prob{P=0.5}=\frac{1}{2}$. Since random variables $X_n$ depend on the same random variable $P$ they are dependent.
+    
+    The time series $(X_n)$ is strong stationary: if $n,m\in\N$:
+    \begin{equation*}
+        \begin{split}
+            \prob{X_n=0,X_m=0}&=\prob{X_n=0,X_m=0|A}\prob{A}+\prob{X_n=0,X_m=0|B}\prob{B}=\frac{1}{8}\\
+            \prob{X_n=0,X_m=1}&=\prob{X_n=1,X_m=0}=\frac{1}{8}\\
+            \prob{X_n=1,X_m=1}&=\prob{X_n=1,X_m=1|A}\prob{A}+\prob{X_n=1,X_m=1|B}\prob{B}=\frac{5}{8}\\
+        \end{split}
+    \end{equation*}
+    Also, these distributions do not depend on $n,m$, making the sequence strong stationary.
+
+    Let us now compute the covariance:
+    \begin{equation*}
+        cov(X_n,X_m)=\expect{X_nX_m}-\expect{X_n}\expect{X_m}=\frac{5}{8}-\frac{9}{16}=\frac{1}{16}\ne 0
+    \end{equation*}
+
+    Can we state 
+    \[
+        \lim_{n\to\infty}\frac{1}{n}\sum_{i=1}^nX_i(\omega)=const\ \ \ \forall \omega\in\mean{\Omega}\ s.t. \prob{\mean{\Omega}}=1  
+    \]
+    ? Consider:
+    \begin{equation*}
+        \begin{split}
+            \app{\omega}=(B,T,T,...) \implies X_i(\app{\omega})=1 \implies \frac{1}{n}\sum_{I=1}^nX_i(\app{\omega})=1\\
+            \omega^*=(A,\omega)\ with\ \omega\in\{H,T\}^{\N} \implies X_i(\omega^*)=X_i^*(\omega)\\
+        \end{split}
+    \end{equation*}
+    i-th coordinate random variable of Bernulli trials. Computing the limit:
+    \[
+        \lim_{n\to\infty}\frac{1}{n}\sum_{i=1}^nX_i(\omega^*)=\lim_{n\to\infty}\frac{1}{n}\sum_{i=1}^nX_i^*(\omega)\eqas \frac{1}{2}  
+    \]
+    by the strong law of large numbers. So no, it is not possible to find a subset of the sample space $\mean{\Omega}$ such that the limit of the time average is equal to a constant. Also, we have proved that the time average does not give information on the mean of a random variable sequence, since the limits have different values from the mean of the sequence.
+    
+    This is an example of a strong stationary time series with constant mean such that the time average does not give information on the overall mean of the process. This is why we need something more.
+\end{example}
+
+\begin{theorem}
+    If a time series $(X_t)$ is strong stationary and $X_n\in\el{1}\ \forall n$ then
+    \[
+        \mean{X}_n\impliesas\mean{X}\in\el{1}
+    \]
+    This is the \textbf{strong ergodic theorem}, and we will not see the proof.
+\end{theorem}
+
+The strong ergodic theorem is a generalization of the strong law of large numbers, because we have random variables having the same distribution but are not (necessarily) independent.
+
+\begin{corollary}
+    $\mean{X}_n\stackrel{\el{1}}\implies\mean{X}$, allowing us to obtain information on the mean of the sequence by means of the time average.
+\end{corollary}
+
+\begin{remark}
+    As $X_n\sim\mathcal{ID}\implies\expect{X_n}=\mu\ \forall n$, then 
+    \[
+        \expect{\mean{X}_n}=\frac{1}{n}\sum_{i=1}^n\expect{X_n}=\mu  
+    \]
+    therefore, as $\mean{X}_n\stackrel{\el{1}}\implies\mean{X}$ then
+    \[
+        \lim_{n\to\infty}\expect{\mean{X}_n}=\expect{\mean{X}}\implies\expect{\mean{X}}=\mu 
+    \]
+    Therefore, if we add to the strong stationarity property the property that these random variables have finite mean, we have that the time average converges almost surely to a random variable $\mean{X}$ that has finite mean, which is the same as the one in the sequence. Therefore, while we recover the time average from observation, this gives information on the overall mean. How good is this information depends on the variance.  
+\end{remark}
+
+Now let us go back to the previous example to see if this property is verified.
+
+\begin{example}
+    If
+    \begin{equation*}
+        \begin{split}
+            \tilde{\omega}=(B,H,H,...)&\implies\lim_{n\to\infty}\mean{X}_n(\tilde{\omega})=1\\
+            \omega^*\in\{\tilde{\omega}\}^c&\implies\lim_{n\to\infty}\mean{X}_n(\omega^*)=\frac{1}{2}\\
+        \end{split}
+    \end{equation*}
+    so, consider a random variable $\mean{X}$ such that
+    \[
+        \prob{B}=\prob{\{\tilde{\omega}\}}=\prob{\mean{X}=1}\ \ \ and \ \ \ \prob{\mean{X}=\frac{1}{2}}=\frac{1}{2}
+    \]
+    Therefore, we have found a random variable $\mean{X}$ such that
+    \[
+        \mean{X}_n\impliesas\mean{X}
+    \]
+    Note that $\expect{\mean{X}}=1\frac{1}{2}+\frac{1}{2}\frac{1}{2}=\frac{3}{4}=\expect{X_n}$ and $\mean{X}\stackrel{d}=P$.
+\end{example}
+
+Since it is rare to work with a strong stationary time series, we will need more tools that do not require this property.
+
+\begin{definition}
+    Suppose a time series $(X_t)$ defined on the probability space $(\Omega,\mathcal{H},\mathbb{P})$. Let us consider the following $\sigma$-algebra:
+    \[
+        \mathcal{G}_t=\sigma X_t=\left\{X_t^{-1}(A),\ A\in\mathcal{B}(\R)\right\}  
+    \]
+    This $\sigma$-algebra contains the information of the system at time $t$. To collect all the information after a certain time, we consider
+    \[
+        \Tau_s=\sigma\left(\bigcup_{t>s}\mathcal{G}_t\right)=\bigvee_{t>s}\mathcal{G}_t
+    \]
+    This time series contains information about the future of the system after $s$.
+
+    Since $\{\Tau_s\}$ is such that $\Tau_s\subseteq\Tau_{s+1}\ \forall s$:
+    \[
+        \Tau=\bigcap_s\Tau_s  
+    \]
+    this is the \textbf{tail $\sigma$-algebra} and contains information about the remote future and events that are not influenced by finite events.
+\end{definition}
+
+\begin{example}
+    Suppose to consider the set of all sequences alternating -1 and 1:
+    \begin{equation*}
+        \begin{split}
+            \Sigma=\{-1,1\}^\N\ \ \ with\ \N=\{1,2,...\}\\
+            (X_n)\ coordinate\ random\ variables\\
+            S_n=\sum_{i=1}^nX_i\ \ \ for\ n\ge1\\
+            H=\{\omega\in\Omega/S_n(\omega)\ge0\ \forall n\ge1\}\\
+        \end{split}
+    \end{equation*}
+    Is the event $H\in\Tau$?
+    
+    Consider $\omega_1=(1,-1,1,-1,...)\in\Omega$. Then
+    \[
+        S_1(\omega_1)=1,\ S_2(\omega_1)=0,\ S_3(\omega_1)=1,\ S_4(\omega_4)=0,\ ...\implies\ S_n(\omega_1)\ge0
+    \]
+    $\forall n\ge1$, so $\omega_1\in H$.\\
+    Consider now $\omega_2=(-1,-1,1,-1,1,-1...)\in\Omega$. Then
+    \[
+        S_1(\omega_2)=-1,\ S_2(\omega_2)=-2,\ S_3(\omega_2)=-1,\ S_4(\omega_2)=-2,\ ...\implies\ S_n(\omega_2)\le0
+    \]
+    $\forall n\ge1$, so $\omega_2\notin H$.\\
+    Note that if an observer looks at the sequence from the third element of $\omega_2$ he can believe to watch the sequence $\omega_1$, thus believing that $\omega_2\in H$, but this is not true; that is because $H$ is not a \textbf{tail event}. So, if an event $H\in\Tau$ we can state if $\omega\in H$ or $\omega\notin H,\ \forall\omega\in\Omega$.
+\end{example}
+
+\begin{definition}
+    A time series $(X_t)$ is an \textbf{ergodic time series} if $\forall H\in\Tau\ \prob{H}=0 \vee 1$.
+\end{definition}
+
+\begin{remark}
+    (0-1 Kolmogrov law) If the sequence of $\sigma$-algebras $\{\mathcal{G}_t\}$ are independent then $\forall H\in\Tau\ \prob{H}=0\vee1$. 
+\end{remark}
+
+\begin{lemma}
+    If the time series $(X_t)$ is a sequence of independent random variables, $(X_t)$ is ergodic.
+\end{lemma}
+
+Now let us get back to the coin example.
+
+\begin{example}
+    Consider the set
+    \[
+        H=\left\{\omega\in\Omega/\lim_{n\to\infty}\mean{X}_m(\omega)=1\right\}=\{(B,H,H,...)\}  
+    \]
+    we know that $\prob{H}=\frac{1}{2}\ne1$, therefore $H\notin\tau$.
+\end{example}
+
+\begin{exercise}
+    State if the following time series are ergodic:
+    \begin{enumerate}
+        \item $\mathcal{IID}(0,\sigma^2)$
+        \item $\mathcal{WN}(0,\sigma^2)$ of independent random variables (notation $\mathcal{IWN}(0,\sigma^2)$)
+        \item $\mathcal{GWN}(0,\sigma^2)$
+        \item $\mathcal{IID}$ with standard Cauchy distribution $f(x)=\frac{1}{\pi(1+x^2)},\ x\in\R$
+        \item $X_t=U\sim\mathcal{B}e(p)$ with $p\in(0,1)$
+    \end{enumerate}
+\end{exercise}

@@ -1,0 +1,403 @@
+\section{Lecture 6}
+\label{lecture6}
+
+\begin{center}
+    \textbf{Estimation of ACF's functions: statistical properties, examples in R, exercises. Ergodicity covariance property in $\el{2}$. Ljung-Box test.  Transformations of data and difference operators: examples in R.}
+\end{center}
+
+\begin{definition}
+    Given the observations $X_1,x_2,...,x_n$ the sample ACF is
+    \[
+        \hat{\gamma}(h):=\frac{1}{n}\sum_{t=1}^{n-h}(x_{t+h}-\mean{x}_n)(x_t-\mean{x}_n)  
+    \]
+    with $\hat{\gamma}(-h):=\hat{\gamma}(h)$, for $h=0,1,...,n-1$ and $\mean{x}_n=\frac{1}{n}\sum_{i=1}^nx_i$.
+\end{definition}
+
+\begin{remark}
+    This result holds for any data set $\set{x_1,...,x_n}.$
+\end{remark}
+
+\begin{definition}
+    The sample (auto) correlation function is
+    \[
+        \hat{\rho}:=\frac{\hat{\gamma}(h)}{\hat{\gamma}(0)}\ \ \ \abs{h}<n  
+    \]
+\end{definition}
+
+\begin{remark}
+    $\abs{\hat{\rho}(h)}\le1$
+\end{remark}
+
+\begin{example}
+    Plot the sample covariance function and the sample correlation function of 500 observations generated from $\mathcal{GWN}(0,10)$ (seed=154). Recall that
+    \[
+        \gamma(h)=\begin{cases}
+            \sigma^2&h=0\\
+            0&h\ne0\\
+        \end{cases}
+        \ \ \ 
+        \rho(h)=\begin{cases}
+            1&h=0\\
+            0&h\ne0\\
+        \end{cases}  
+    \]
+    Plot also the correlation among data up to $h=9$ by using a \textbf{lag plot} (which is a scatter diagram of $\set{x_t,x_{t+h}}$).
+
+\begin{verbatim}
+####################################
+# Generating Gaussian WN(0,10)- ACF#
+####################################
+# generate a sample path of values from N(0,10) with the seed 154
+set.seed(154)
+w10=rnorm(500,0,sqrt(10))
+# plot the autocorrelation function
+acf(w10)
+# the blue lines refer to 95%-confidence interval with amplitude 2 /sqrt(n)
+# plot the autocovariance function
+acf(w10,type='covariance')
+# default lag
+10*log10(500)
+# change the lag window (up to n-1<--499)
+acf(w10,lag.max=40)
+# to remove the zero lag of the ACF (which is equal to rho(0)=1), let us use the
+# library astsa (see first lecture).
+# Please, install the package.
+install.packages('astsa')
+#Load the library
+library(astsa)
+# to remove the zero lag value of the ACF
+acf1(w10,max.lag=40)
+# a different way to see uncorrelation
+lag.plot(w10,9)
+# lag 1: X_t versus X_t+1--> (x1,x2),(x2,x3),...
+# lag 2: X_t versus X_t+2--> (x1,x3),(x2,x4),...
+# up to lag 9
+# lag 9: X_t versus X_t+9--> (x1,x10),(x2,x11),...
+# a different number of plots
+lag.plot(w10,4)
+# to see how the correlation moves with the lagged time: set n=10
+w10=rnorm(10,0,sqrt(10))
+lag.plot(w10,4,do.lines=TRUE)
+# depending on the version of R, as default do.lines=TRUE. To remove this option use
+lag.plot(w10,4,do.lines=FALSE)
+# Ljung-Box test
+help('Box.test')
+#
+Box.test(w10,type="Ljung",lag=20,fitdf=0)
+\end{verbatim}
+\end{example}
+
+\begin{exercise}
+    Plot the sample covariance function and the sample correlation function of $(X_t)$ such that
+    \[
+        X_t=\begin{cases}
+            Z_t&t\ odd\\
+            \frac{Z_{t-1}^2-1}{\sqrt{2}}&t\ even\\
+        \end{cases}  
+    \]
+    with $(Z_t)\sim\mathcal{IID}(0,1)$ Gaussian random variables. Set seed=154, t=1 and n=100.
+\end{exercise}
+
+\begin{example}
+    \begin{enumerate}
+        \item Plot the sample covariance function of a random walk with $\mu=0.2,\ seed=154, t_0=1, n=200$.
+        \item Study the behaviour of the sample correlation function for the following time windows: (0,40), (0,80), (0,150).
+        \item Produce a lag plot for $h=9$.
+    \end{enumerate}
+\begin{verbatim}
+#######################################
+# Exercise in R
+#######################################
+# Generate a sample path of GWN(0,1) with seed 154
+set.seed(154)
+w=rnorm(100,0,1)
+# initialize the vector x with w
+x=w
+# change the elements in x corresponding to even steps.
+for(i in 1:50) {x[2*i]=(x[2*i-1]^2-1)/sqrt(2)}
+# plot the covariance function
+acf(x,50,type='covariance')
+# load the library
+library(astsa)
+# plot ACF without the value in zero
+acf1(x,50)
+#########################################
+# ACF of a random walk
+#########################################
+# Generate 200 values from N(0,1) with seed 154
+set.seed(154)
+w=rnorm(200,0,1)# the random walk
+x = cumsum(w)
+times=seq(1,200,1)
+mu = 0.2
+xd = mu*times + x
+# plot the sample covariance function
+acf(xd,type='covariance')
+10*log10(200)
+#load the library
+library(astsa)
+# plot the sample correlation function with different time windows
+acf1(xd,max.lag=40)
+acf1(xd,max.lag=80)
+acf1(xd,max.lag=150)
+# plot the lag plot
+lag.plot(xd,9) 
+\end{verbatim}
+\end{example}
+
+As estimators of $\gamma(h)$ (and $\rho(h)$) we can use $x_{t+h}\leftarrow X_{t+h}$ and $\mean{x}_n\leftarrow\mean{X}_n$, obtaining
+\[
+    \hat{\gamma}(h)=\frac{1}{n}\sum_{t=1}^{n-h}(X_{t+h}-\mean{X}_n)(X_t-\mean{X}_n)    
+\]
+for $h=0,1,...,n-1$ and $\mean{X}_n=\frac{1}{n}\sum_{t=1}^nX_t$. The same goes for $\rho(h)$.
+
+\begin{remark}
+    For $h=0$:
+    \[
+        \hat{\gamma}(h)=\frac{1}{n}\sum_{t=1}^n(X_t-\mean{X}_n)^2=\frac{1}{n}\sum_{t=1}^nY_t^2
+    \]
+    where $Y_t=X_t-\mean{X}_n\ t=1,2,...,n$.
+    For $h=1$:
+    \[
+        \hat{\gamma}(1)=\frac{1}{n}\sum_{t=1}^{n-1}(X_{t+1}-\mean{X}_n)(X_t-\mean{X}_n)=\frac{1}{n}\sum_{t=1}^{n-1}Y_{t+1}Y_t
+    \]
+    In general:
+    \[
+        \hat{\gamma}(h)=\frac{1}{n}\left(Y_{h+1}Y_1+...+Y_nY_{n-h}\right)  
+    \]
+    for $h=0,1,...,n-1$.
+\end{remark}
+
+Unfortunately, these estimators are not unbiased.
+
+\begin{remark}
+    Consider $h=0$ and suppose $X_1,X_2,...,X_n$ iid:
+    \[
+        \hat{\gamma}(0)=\frac{1}{n}\sum_{t=1}^n(X_t-\mean{X}_n)^2\ne\sigma^2=\frac{1}{n-1}\sum_{t=1}^n(X_t-\mean{X}_n)^2
+    \]
+    $\hat{\gamma}(h)$ is then a biased estimator of the variance of the random variables involved in the sequence.
+\end{remark}
+
+So why use $\hat{\gamma}(h)$?
+\begin{enumerate}
+    \item under certain conditions $\lim_{n\to\infty}\expect{\hat{\gamma}(h)}=\gamma(h)$;
+    \item According to theorem \ref{t:acf}, $\hat{\gamma}(h)$ is an ACF beacuse:
+    \begin{itemize}
+        \item $\hat{\gamma}(h)$ is an even function (by definition);
+        \item $\hat{\gamma}(h)$ is non-negative definite.
+    \end{itemize}
+\end{enumerate}
+
+Now we will prove this last assumption.
+
+\begin{proof}
+    Consider
+    \[
+        \left(\hat{T}_{(n)}\right)_{ij}=\hat{\gamma}(i-j)  
+    \]
+    Note that $\hat{T}_{(n)}$ is non-negative definite. Recall that if $Y_i=X_i-\mean{X}_n\ i=1,2,...,n$. Then
+    \[
+        \hat{\Gamma}_{(n)}=\frac{1}{n}TT^\intercal    
+    \]
+    $\forall \boldsymbol{a}\in\R$ we have
+    \[
+        \boldsymbol{a}\hat{\Gamma}_{(n)}\boldsymbol{a}^\intercal=\frac{1}{n}\boldsymbol{a}TT^\intercal\boldsymbol{a}^\intercal=\frac{1}{n}\left(\boldsymbol{a}T\right)\left(\boldsymbol{a}T\right)^\intercal\ge0
+    \]
+    so $\hat{\gamma}$ is a non-negative definite function.
+\end{proof}
+
+\begin{remark}
+    We might check if 
+    \[
+        \hat{\gamma}(h)=\frac{1}{n-h}\sum_{t=1}^{n-h}(X_{t+h}-\mu)(X_t-\mu)  
+    \]
+    is an unbiased estimator of $\gamma(h)$, but in this scenario is not anymore possible to say that $\hat{\Gamma}=TT^\intercal$.
+\end{remark}
+
+\begin{definition}
+    The time series $(X_t)$ has the covariance ergodic property in $\el{2}$ if
+    \[
+        \hat{\gamma}(h)\stackrel{\el{2}}{\implies}\gamma(h)\ \ \ \forall h\in\Z  
+    \]
+    For Gaussian stationary time series:
+    \[
+        \sum_{h=-\infty}^+\infty\abs{\gamma(h)}<\infty  
+    \]
+    is a sufficient condition to recover the ergodic covariance property in $\el{2}$.
+\end{definition}
+
+\begin{example}
+    \begin{verbatim}
+################################################
+# Generation of sinusoidal ACF
+################################################
+#load the library astsa
+library(astsa)
+# load the data
+data(speech)
+# plot the speech dataset
+plot(speech)
+#plot ACF up to 250, check the sample size
+length(speech)
+acf1(speech,250)
+# plot the lag.plot
+lag.plot(speech,9,do.lines=FALSE)
+# Test
+Box.test(speech,type="Ljung",lag=20,fitdf=0)
+#require the library TSA
+install.packages('TSA')
+library(TSA)
+#load the dataset
+data(tempdub)
+#plot the dataset
+plot(tempdub,type='o',ylab='temperature')
+#plot ACF up to ?, check the sample size
+length(tempdub)
+acf1(tempdub,100)
+# plot the lag.plot
+lag.plot(tempdub,9,do.lines=FALSE)
+# Test
+Box.test(tempdub,type="Ljung",lag=20,fitdf=0)
+    \end{verbatim}
+\end{example}
+
+\begin{definition}
+    Given the observation $x_1,x_2,...,x_n$ the sample ACF is
+    \begin{equation*}
+        \begin{split}
+            \hat{\gamma}(h)&:=\frac{1}{n}\sum_{t=1}^{n-h}(x_{t+h}-\mean{x}_n)(X_t-\mean{x})\\
+            \hat{\gamma}(-h)&:=\hat{\gamma}(h)\\
+        \end{split}
+    \end{equation*}
+    for $h=0,1,...,n-1$ and $\mean{x}_n=\frac{1}{n}\sum_{i=1}^nx_n$.
+\end{definition}
+
+It is not possible to estimate the covariance function for $h\ge n$, and it is not recommended to use values of $h$ near to $n$, since the amount of information we can retrieve is very small. For example, if we fix $h=n-1$ we have that that $\sum_{t=1}^n-h\leftarrow(x_n,x_1)$. An empirical rule adopted in the literature is, for $n\ge50$, to use $h\le\frac{n}{4}$.
+
+It is useful to have a correlation function decreasing to zero to use all these estimators. For doing this, we can use a specific hypothesis test.
+
+\begin{definition}
+    The \textbf{Ljung-Box test} ($\sim$Box-Pierce test) is a statistical test that allows studying the correlation function of a time series. It is defined as
+    \[
+        Q=n(n+2)\sum_{h=1}^N\frac{(\hat{\rho}(h))^2}{n-h} 
+    \]
+    with $N\simeq20$. If the independence between the random variables of the sequence is reasonable, then $Q\simeq\chi^2_N$.
+\end{definition}
+
+Examples of the usage of the Ljung-Box test are available in the R code snippets in this Lecture. It can be used to assess the independence between the random variables of the time series.
+
+
+It is sometimes useful to apply some transformation to a time series in order to investigate it better. The most common transformations are:
+\begin{itemize}
+    \item to linearize exponential growth:
+    \item to stabilize the variance (square-root transformations);
+    \item to transform multiplicative pattern in additive ones (logarithmic transformations);
+    \item to make data normally distributed.
+\end{itemize}
+
+The logaritmic and square root transformation are very popular and are special cases of the \textbf{Box-Cox transformations}:
+\[
+    y_t=\begin{cases}
+        \frac{x_t^\lambda-1}{\lambda}&\lambda\ne0\\
+        \log x_t&\lambda=0\\
+    \end{cases}  
+\]
+
+\begin{example}
+    Consider $P_r$ price of a risk asset at some time $t$. Then $\frac{P_t}{P_{t-1}}$ is the relative change of the price over $(t-1,t)$. A very popular model to fit financial data is the sthocastic process $X_t=\log\frac{P_t}{P_{t-1}}=\log P_t-\log P_{t-1}$.
+\end{example}
+
+\begin{definition}
+    The \textbf{backshift} operator is defined as
+    \[
+        B:\R^\Z\mapsto\R^\Z    
+    \]
+    such that
+    \[
+        x=(x_t)_{t\in\Z}\implies Bx=y=(y_t)_{t\in\Z}\ y_t=x_{t-1}\ \forall t\in\Z  
+    \]
+    and is notated as $BX_t=X_{t-1}$. This operator can be iterated in the following way:
+    \[
+        B^JX_t=X_{t-j}\ for\ j\ge1  
+    \]
+\end{definition}
+
+\begin{example}
+    $B^2X_t=B(BX_t)=B(X_{t-1})=X_{t-2}$
+\end{example}
+
+\begin{definition}
+    The \textbf{difference operator} is defined as
+    \[
+        \nabla\stackrel{def}{=}1-B  
+    \]
+    such that
+    \[
+        \nabla X_t=(1-B)X_t=X_t-BX_t=X_t-X_t  
+    \]
+    Its iterated version is
+    \[
+        \nabla^JX_t\stackrel{def}{=}\nabla(\nabla^{j-1}X_t)\ for\ j\ge1
+    \]
+    assuming
+    \[
+        \nabla^0X_t=X_t  
+    \]
+    An other version of this operator is the difference operator at lag $d$:
+    \[
+        \nabla_d\stackrel{def}{=}(1-B^d)
+    \]
+    such that
+    \[
+        \nabla_d X_t=(1-B^d)X_t=X_t-B^dX_t=X_t-X_{t-d}  
+    \]
+\end{definition}
+
+\begin{example}
+    Suppose that we want to evaluate
+    \[
+        \nabla^2X_t  
+    \]
+    We can proceed in two ways:
+    \begin{enumerate}
+        \item \begin{equation*}
+            \begin{split}
+                \nabla(\nabla X_t)&=(1-B)[(1-B)X_t]\\
+                &=(1-B)^2X_t\\
+                &=(1-2B+B^2)X_t\\
+                &=X_t-2X_{t-1}+X_{t-2}\\
+            \end{split}
+        \end{equation*}
+        \item \begin{equation*}
+            \begin{split}
+                \nabla(\nabla X_t)&=\nabla(X_t-X_{t-1})\\
+                &=(X_t-X_{t-1})-(X_{t-1}-X_{t-2})\\
+                &=X_t-2X_{t-1}+X_{t-2}\\
+            \end{split}
+        \end{equation*}
+    \end{enumerate}
+\end{example}
+
+\begin{example}
+    Suppose to consider a random walk $X_t=\mu+X_{t-1}+W_t$. We know that this time series is non stationary, but if we apply the difference operator we obtain that:
+    \[
+        X_t-X_{t-1}=\mu+W_t\implies\nabla X_t=\mu+W_t  
+    \]
+    we find a white noise, or a sequence of iid random variables, shifted of $\mu$ which are, in both cases, stationary. This is especially useful for removing trends, and we can be repeatedly applied to obtain a stationary time series.
+\end{example}
+
+\begin{example}
+    Consider a time series $X_t=\mu_t+Y_t$ with $\mu_t=\delta+\mu_{t-1}+W_t$ random walk and $Y_t$ a stationary time series. Then we have that
+    \[
+        \nabla X_t=X_t-X_{t-1}=\mu_t-\mu_{t-1}+Y_t-Y_{t-1}=\sigma+W_t+Y_t-Y_{t-1}  
+    \]
+    which is a stationary time series (the proof is left as an exercise).
+\end{example}
+
+\begin{exercise}
+    Suppose $W_t\sim\mathcal{WN}(0,\sigma^2)$. Rewrite the following time series using $B$:
+    \begin{enumerate}
+        \item $X_t=W_t+\phi_1W_{t-1}+...+\phi_qW_{t-q},\ t\in\Z,\ q\in\N$
+        \item $X_t=\theta_1X_{t-1}+...+\theta_pX_{t-p},\ t\in\Z,\ p\in\N$
+    \end{enumerate}
+\end{exercise}

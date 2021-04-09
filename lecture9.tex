@@ -1,0 +1,322 @@
+\section{Lecture 9}
+\label{lecture9}
+
+\begin{center}
+    \textbf{Laurent series and operators: convergence in mean squared, linear time series, causality. MA of order infinite. Stationary t.s. obtained by applying linear filters to stationary t.s. ACF of linear time series and MA. Properties of MA(q).}
+\end{center}
+
+\begin{exercise}
+    Suppose $\mathcal{E}$ the set of all $(W_t)\in\el{2}$ bounded. Consider
+    \[
+        \lf{(W_t)}=(X_t)    
+    \]
+    with $X_t=\phi(B)W_t\ \forall t\in\Z$ where $\psi(Z)=\sum_{j\in\Z}\psi_jZ^j$. Check if $\mathcal{L}$ is a time invariant linear filter.
+\end{exercise}
+
+\begin{definition}
+    If $(W_t)\sim\mathcal{WN}(0,\sigma^2)$ them $(X_t)$ with
+    \[
+        X_t=\psi(B)W_t\ \ \ \forall t\in\Z  
+    \]
+    is said a \textbf{linear time series}.
+\end{definition}
+
+\begin{remark}
+    If $\mathcal{E}$ is the set of all $\mathcal{WN}(0,\sigma^2)$ and $\lf{(W_t)}=(X_t)$ such that the previous theorem's condition holds, then $\mathcal{L}$ is a time-invariant linear filter.
+\end{remark}
+
+\begin{definition}
+    If $\psi_j=0$ for $j<0$ then $(X_t)$ is said to be a \textbf{causal linear time series}:
+    \[
+        X_t=\sum_{j\ge0}\psi_jW_{t-j}=\psi_0W_t+\psi_1W_{t-1}+\psi_2W_{t-2}+...  
+    \]
+    In other words, it does not depend on the future.
+\end{definition}
+
+\begin{exercise}
+    Check if $X_t=a_{-1}W_{t+1}+a_0W_t+a_1W_{t-1}$ with $a_{-1},a_0,a_1\in\R$ and $(W_t)\sim\mathcal{WN}(0,\sigma^2)$ is a causal linear time series.
+\end{exercise}
+
+\begin{definition}
+    If $(W_T)\sim\mathcal{WN}(0,\sigma^2),\ (X_t)\sim MA(\infty)$ of $(W_t)$ if $\exists\set{\psi_j}$ for $j>0$ with $\psi_0=1$ and $\sum_{j\ge0}\abs{\psi_j}<\infty$ such that
+    \[
+        X_t=\sum_{j\ge0}\psi_jW_{t-j}\ \ \ \forall t\in\Z  
+    \]
+\end{definition}
+
+\begin{example}
+    Consider $\psi_j=\rho^j$ with $\abs{\rho}<1$ and $j\ge0$. Then
+    \[
+        X_t=\sum_{j\ge0}\rho^jW_{t-j}\sim MA(\infty)
+    \]
+    with $(W_t)\sim\mathcal{WN}(0,\sigma^2)$.
+\end{example}
+
+\begin{proposition}
+    \label{ma_ss}
+    If $(W_t)\sim\mathcal{IID}(0,\sigma^2)$ then $MA(\infty)$ is strong stationary.
+\end{proposition}
+
+\begin{proof}
+    $\forall g$ measurable function, if $\boldsymbol{z}_1$ and $\boldsymbol{z}_2$ are such that $\boldsymbol{z}_1\stackrel{d}{=}\boldsymbol{z}_2\implies g(\boldsymbol{z}_1)\stackrel{d}{=}g(\boldsymbol{z}_2)$. Fix $K\in\N$ and $(t_1,...,t_k)=\boldsymbol{t}\in\Z^k$:
+    \[
+        \tilde{X}_{boldsymbol{t},n}=\left(\tilde{X}_{t_1,n},...,\tilde{X}_{t_k,n}\right)=\left(\sum_{j=0}^n\psi_jW_{t_1-j},...,\sum_{j=0}^n\psi_jW_{t_k-j}\right) 
+    \]
+    as $(W_t)\sim\mathcal{IID}(0,\sigma^2)$:
+    \[
+        \left(W_{t_1},...,W_{t_i-n}\right)\stackrel{d}{=}\left(W_{t_i+h},...,W_{t_i+h-n}\right)
+    \]
+    for $i=1,...,k,\ \forall h\in\Z$. From the first statement of the proof, we obtain that
+    \[
+        \tilde{X}_{\boldsymbol{t},n}\stackrel{d}{=}\left(\sum_{j=0}^n\psi_jW_{t_1+h-j},...,\sum_{j=0}^n\psi_jW_{t_k+h-j}\right)=\left(\tilde{X}_{t_1+h,n},...,\tilde{X}_{t_k+h,n}\right)=\tilde{X}_{\boldsymbol{t}+\boldsymbol{h},n}
+    \]
+    From theorem \ref{theorem} we obtain that
+    \[
+        \tilde{X}_{\boldsymbol{t},n}=\left(\tilde{X}_{t_1,n},...,\tilde{X}_{t_k,n}\right)\impliesas\left(X_{t_1},...,X_{t_k}\right)=X_{\boldsymbol{t}}
+    \]
+    as well as
+    \[
+        \tilde{X}_{\boldsymbol{t}+\boldsymbol{h},n}=\left(\tilde{X}_{t_1+h,n},...,\tilde{X}_{t_k+h,n}\right)\impliesas\left(X_{t_1+h},...,X_{t_k+h}\right)=X_{\boldsymbol{t}+\boldsymbol{h}} 
+    \]
+    as $\tilde{X}_{\boldsymbol{t},n}\stackrel{d}{=}\tilde{X}_{\boldsymbol{t}+\boldsymbol{h},n}\implies X_{\boldsymbol{t}\stackrel{d}{=}X_{\boldsymbol{t}+\boldsymbol{h}}}$
+\end{proof}
+
+Given proposition \ref{ma_ss} and the following result:
+
+\begin{theorem}
+    If $(X_t)$ is a time series such that $X_t=f(W_s, s\le t),\ \forall t\in\Z$ and $(W_t)\sim\mathcal{IID}$ with $f$ measurable function, then $(X_t)$ is ergodic.
+\end{theorem}
+
+we can say that $MA(\infty)$ is ergodic.
+
+\begin{theorem}
+    Let $\tilde{X}_{t,n}=\sum_{j=-n}^n\psi_{t-j}W_{t-j}$ with $\set{\psi_j}$ such that $\sum_{j\in\Z}\abs{\psi_j}<\infty$. If $\sup_{t\in\Z}\expect{W_t^2}<\infty$ then
+    \[
+        \tilde{X}_{t,n}\stackrel{\el{2}}{\implies}\tilde{X}_t\ \ \ \forall t\in\Z  
+    \]
+    with $X_t=\sum_{j\in\Z}\psi_jW_{t-j}$.
+\end{theorem}
+
+\begin{proof}
+    As first step, let us prove that $\set{\tilde{X}_{t,n}}$ is a $\el{2}$ Cauchy sequence, that is
+    \[
+        \lim_n\expect{\left(\tilde{X}_{t,n}-\tilde{X}_{t,m}\right)^2}=0\ \ \ \forall t\in\Z,n,m\in\N  
+    \]
+    Fix $0<m<n,\ t\in\Z$:
+    \begin{equation*}
+        \begin{split}
+            \expect{\left(\tilde{X}_{t,n}-\tilde{X}_{t,m}\right)^2}&=\expect{\left(\sum_{j=-n}^n\psi_jW_{t-j}-\sum_{j=-m}^m\psi_jW_{t-j}\right)^2}\\
+            &=\expect{\left(\sum_{m<\abs{j}\le n}\psi_jW_{t-j}\right)^2}\\
+            &=\sum_{m<\abs{j}\le n}\sum_{m<\abs{k}\le n}\psi_j\psi_k\expect{W_{t-j}W_{t-k}}\\
+        \end{split}
+    \end{equation*}
+    Set $M=\sup_t\expect{W_t^2}<\infty$. From Cauchy-Schwartz:
+    \begin{equation*}
+        \begin{split}
+            \expect{W_{t-j}W_{t-k}}&\le\left(\expect{W_{t-j}^2}\right)^\frac{1}{2}\left(\expect{W_{t-k}^2}\right)^\frac{1}{2}\\
+            &\le\left(\sup_t\expect{W_t^2}\right)^\frac{1}{2}\left(\sup_t\expect{W_t^2}\right)^\frac{1}{2}\\
+            &=M<\infty\\
+        \end{split}
+    \end{equation*}
+    We now have that
+    \begin{equation*}
+        \begin{split}
+            \expect{\left(\tilde{X}_{t,n}-\tilde{X}_{t,m}\right)^2}&\le M\sum_{m<\abs{j}\le n}\sum_{m<\abs{k}\le n}\psi_j\psi_k\\
+            &=\left(\sum_{m<\abs{j}\le n}\abs{\phi_j}\right)^2\\
+            &=\left(\sum_{\abs{j}\le n}\abs{\psi_j}-\sum_{\abs{k}\le m}\abs{\psi_j}\right)^2\\
+            &=\left(S_n-S_m\right)^2\\
+        \end{split}
+    \end{equation*}
+    $S_n,\ S_m$ are partial sums of
+    \[
+        \sum_{j\in\Z}\abs{\psi_j}\le\infty
+    \]
+    So $\set{S_n}$ is a Cauchy sequence, implying that $\lim_{n,m}\left(S_n-S_m\right)^2=0$. We can now state that
+    \[
+        \lim_{n,m}\expect{\left(\tilde{X}_{t,n}-\tilde{X}_{t,m}\right)^2}\le M\lim_{n,m}\left(S_n-S_m\right)^2
+    \]
+    but, since we kwnow that the right member of the equation is equal to 0, we also know that the first one is. Now recall the following result: if $\set{X_n}$ are real valued random variables then the following statements are equivalent:
+    \begin{enumerate}
+        \item $\set{X_n}$ converges is $\el{2}$
+        \item $\set{X_n}$ is a $\el{2}$ Cauchy sequence
+        \item $\set{X_n}$ converges in probability and is uniformly integrable
+    \end{enumerate}
+    As $\set{\tilde{X}_{t,n}}$ is a $\el{2}$ Cauchy sequence then $\exists S_t\in\el{2}$ such that
+    \[
+        \tilde{X}_{t,n}\stackrel{\el{2}}{\implies}S_t\ and\ \tilde{X}_{t,n}\stackrel{P}{\implies}S_t
+    \]
+    As $(W_t)\in\el{2}$-bounded, then $(W_t)\in\el{1}$-bounded, proving theorem \ref{ma_ss}, and
+    \[
+        \tilde{X}_{t,n}\stackrel{a.s.}{\implies}X_t\ and\ \tilde{X}_{t,n}\stackrel{P}{\implies}  
+    \]
+    then $S_t\stackrel{a.s.}{=}X_t$.
+\end{proof}
+
+\begin{theorem}
+    \label{theorem7}
+    Consider a time series $(W_t)$ stationary, with zero mean and ACF $\gamma_W()$ and $(X_t)$ such that $X_t=X_t\psi(B)W_t\ \forall t\in\Z$. Then
+    \begin{enumerate}
+        \item $\expect{X_t}=0\ \forall t\in\Z$
+        \item $(X_t)$ is stationary
+        \item the ACF of $X_t$ is such that 
+            \[
+                \gamma_X(h)=\sum_{j\in\Z}\sum_{k\in\Z}\psi_i\psi_k\gamma_W(h+k-j)\ \ \ \forall h\in\Z  
+            \]
+    \end{enumerate}
+\end{theorem}
+
+\begin{proof}
+    We know that $(W_t)$ is stationary with zero mean, so $Var(W_t)=\expect{W_t^2}=\sigma^2>0$ and $\expect{\abs{W_t}}\le\left(\expect{W_t^2}\right)\frac{1}{2}=\sigma$. Then
+    \[
+        \sum_{j\in\Z}\expect{\abs{\psi_jW_{t-j}}}=\sum_{j\in\Z}\abs{\psi_j}\expect{\abs{W_{t-j}}}\le\sum_{j\in\Z}\abs{\psi_j}  
+    \]
+    From the lemma of theorem \ref{ma_ss}:
+    \[
+        \expect{\sum_{j\in\Z}\psi_jW_{t-j}}=\sum_{j\in\Z}\psi_j\expect{W_{t-j}}=0  
+    \]
+    proving the first point of the theorem. Now we will prove the second and third points together. Consider
+    \begin{equation*}
+        \begin{split}
+            \gamma_X(t+h,t)&=\expect{X_{t+h}X_t}-\expect{X_{t+h}\expect{X_t}}\\
+            &=\expect{\left(\sum_{j\in\Z}\psi_jW_{t+h-j}\right)\left(\sum_{k\in\Z}\psi_kW_{t-k}\right)}\\
+            &=\expect{\sum_{j\in\Z}\sum_{k\in\Z}\psi_j\psi_kW_{t+h-j}W_{t-k}}\\
+        \end{split}
+    \end{equation*}
+    We can exchange the exèected value and the sums if
+    \[
+        \sum_{j\in\Z}\sum_{k\in\Z}\abs{\psi_j}\abs{\psi_k}\expect{\abs{W_{t+h-j}W_{t-h}}}<\infty  
+    \]
+    Applying Cauchy-Schwartz:
+    \begin{equation*}
+        \begin{split}
+            \expect{\abs{W_{t+h-j}W_{t-k}}}&\le\left(\expect{W_{t+h-j}^2}\right)^\frac{1}{2}\left(\expect{W_{t-k}^2}\right)^\frac{1}{2}\\
+            &\le\sigma^2\sum_{j\in\Z}\sum_{k\in\Z}\abs{\psi_j}\abs{\psi_k}\\
+            &=\sigma^2\left(\sum_{j\in\Z}\abs{\psi_j}\right)\left(\sum_{k\in\Z}\abs{\psi_k}\right)\\
+            &=\sigma^2\left(\sum_{j\in\Z}\abs{\psi_j}\right)^2<\infty\\
+        \end{split}
+    \end{equation*}
+    We can now exhange the expectation and the summations:
+    \[
+        \expect{X_{t+h}X_t}=\sum_{j\in\Z}\sum_{k\in\Z}\psi_j\psi_k\expect{W_{t+h-j}W_{t-k}}=\sum_{j\in\Z}\sum_{k\in\Z}\psi_j\psi_k\gamma_W(h-j+k)
+    \] 
+    for $h=0$:
+    \begin{equation*}
+        \begin{split}
+            \expect{X_t^2}&=\sum_{j\in\Z}\sum_{k\in\Z}\psi_j\psi_k\gamma_W(h-j+k)\\
+            &\le\sum_{j\in\Z}\sum_{k\in\Z}\abs{\psi_j}\abs{\psi_k}\abs{\gamma_W(h-j+k)}\\
+            &\le\gamma_W(0)\\
+            &=\sigma^2 <\infty\\
+        \end{split}
+    \end{equation*}
+    Thus showing that $X_t\in\el{2}$, concluding the proof.
+\end{proof}
+
+\begin{remark}
+    Suppose $(Y_t)$ such that $Y_t=\mu+\psi(B)W_t\ \forall t\in\Z,\ \mu\in\R$ and $(W_t)$ stationary, with zero mean and ACF $\gamma_W$. Then theorem \ref{theorem7} applies to $(X_t)$ such that
+    \[
+        X_t=Y_t-\mu  
+    \]
+    and
+    \begin{enumerate}
+        \item $Y_t\in\el{2}\Leftarrow X_t\in\el{2}\ \forall t\in\Z$
+        \item $\expect{Y_t}=\mu\ \forall t\in\Z$
+        \item $cov(Y_{t+h}, Y_t)=\expect{(Y_{t+h}-\mu)(Y_t-\mu)}=\expect{X_{t+h}X_t}=$ point 3. of \ref{theorem7}
+    \end{enumerate}
+\end{remark}
+
+\begin{corollary}
+    \begin{enumerate}
+        \item A linear time series is stationary, zero mean and has ACF
+        \[
+            \gamma(h)=\sigma^2\sum_{j\in\Z}\psi_j\psi_{j-h}\ \ \ \forall h\in\Z  
+        \]
+        \item A $MA(\infty)$ is stationary, zero mean and has ACF
+        \[
+            \gamma(h)=\sigma^2\sum_{j\ge0}\psi_j\psi_{j+\abs{h}}\ \ \ \forall h\in\Z  
+        \]
+    \end{enumerate}
+\end{corollary}
+
+\begin{proof}
+    Denote with $(X_t)$ the linear time series. Then we know that $X_t=\psi(B)W_t\ \forall t\in\Z$ with $(W_t)\sim\mathcal{WN}(0,\sigma^2)$. From theorem \ref{theorem7} we know that it is stationary, has zero mean and has ACF
+    \[
+        \gamma_X(h)=\sum_{j\in\Z}\sum_{k\in\Z}\psi_j\psi_k\gamma_W(h-j+k)
+    \]
+    As we know that
+    \[
+        \gamma_W(h-j+k)=\begin{cases}
+            \sigma^2&if\ k=j-h\\
+            0&if\ k\ne j-h\\
+        \end{cases}  
+    \]
+    then we can rewrite the ACF as
+    \begin{equation*}
+        \begin{split}
+            \gamma_X(h)&=\sum_{j\in\Z}\sum_{k\in\Z}\psi_j\psi_k\gamma_W(h-j+k)\\
+            &=\sum_{j\in\Z}\psi_j\psi_{j-h}\gamma_W{0}\\
+            &=\sigma^2\sum_{j\in\Z}\psi_j\psi_{j-h}
+        \end{split}
+    \end{equation*}
+    proving point 1. Passing to point 2, now $(X_t)\sim MA(\infty)$; we know that this is a linear time series from the previous point but, for $h\ge0$, $\psi_j\psi_{j-h}\ne0\iff j\ge0\ and\ j-h\ge0$. Then the ACF is
+    \[
+        \gamma_X(h)=\sigma^2\sum_{j\ge h}\psi_j\psi_{j-h}=\sigma^2\sum_{k\ge0}\psi_{k+h}\psi_{k}=\sigma^2\sum_{k\ge0}\psi_k\psi_{k+\abs{h}}
+    \]
+    and for $h\le0,\ \psi_j\psi_{j-h}\ne0\iff j\ge0$:
+    \[
+        \gamma_X(h)=\sigma^2\sum_{j\ge0}\psi_j\psi_{j-h}=\sigma^2\sum_{j\ge0}\psi_j\psi_{j+\abs{h}}  
+    \]
+    concluding the proof.
+\end{proof}
+
+Note that the moving average of order q is a special case of $MA(\infty)$ and that:
+\begin{itemize}
+    \item it is a causal model; 
+    \item $(W_t)\sim\mathcal{IID}(0,\sigma^2)\implies MA(q)$ is strong stationary;
+    \item has ACF
+    \[
+        \gamma_X(h)=\begin{cases}
+                \sigma^2\sum_{j=0}^{q-\abs{h}}\phi_j\phi_{j+\abs{h}}&\abs{h}\le q\\
+                0&\abs{h}>q
+        \end{cases}  
+    \]
+    \begin{proof}
+        If $(X_t)\sim MA(\infty)$ then
+        \[
+            \gamma_X(h)=\sigma^2\sum_{j\ge0}\psi_j\psi_{j+h}  
+        \]
+        For $h\ge0\ \psi_j\psi_{j+h}\ne0\iff0\le j\le q\ and\ 0\le j+h\le q$ then
+        \[
+            \gamma_X(h)=\begin{cases}
+                \sigma^2\sum_{j=0}^{q-h}\phi_j\phi_{j+h}&h=0,...,q\\
+                0&h>q\\
+            \end{cases}  
+        \]
+        For $h\le0\ \psi_j\psi_{j-h}\ne0\iff0\le j\le q\ and\ 0\le j-h\le q$ then
+        \[
+            \gamma_X(h)=\begin{cases}
+                \sigma^2\sum_{j=0}^{q+h}\psi_j\psi_{j-h}&h=-q,...,0\\
+                0&h<-q\\
+            \end{cases}  
+        \]
+    \end{proof}
+    \item has the mean-ergodic property as $\lim_h \gamma_X(h)=0\Leftarrow\gamma_X(h)=0\ \abs{h}>q$
+    \item If $(X_t)\sim MA(\infty)\Leftarrow\set{\psi_j}$ from data
+\end{itemize}
+
+\begin{exercise}
+    Check these ACFs $\rho_X(h)$ of $MA(q)$:
+    \begin{enumerate}
+        \item $q=1$: $\rho_X(\pm1)=\frac{\phi_1}{1+\phi_1^2}$ and $\rho_X(h)=0\ \abs{h}>1$
+        \item $q=2$: $\rho_X(h)=0\ \abs{h}>2$
+        \begin{itemize}
+            \item $\rho_X(\pm2)=\frac{\phi_2}{1+\phi_1^2+\phi_2^2}$
+            \item $\rho_X(\pm1)=\frac{\phi_1(1+\phi_2)}{1+\phi_1^2+\phi_2^2}$
+        \end{itemize}
+        \item $q=3$: $\rho_X(h)=0\ \abs{h}>3$ 
+        \begin{itemize}
+            \item $\rho_X(\pm3)=\frac{\phi_3}{1+\phi_1^2+\phi_2^2+\phi_3^2}$
+            \item $\rho_X(\pm2)=\frac{\phi_2+\phi_1\phi_3}{1+\phi_1^2+\phi_2^2+\phi_3^2}$
+            \item $\rho_X(\pm1)=\frac{\phi_1+\phi_1\phi_2+\phi_2\phi_3}{1+\phi_1^2+\phi_2^2+\phi_3^2}$
+        \end{itemize}
+    \end{enumerate}
+\end{exercise}
