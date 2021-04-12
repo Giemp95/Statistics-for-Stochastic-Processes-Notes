@@ -1,0 +1,456 @@
+\section{Lecture 12}
+\label{lecture12}
+
+\begin{center}
+    \textbf{ARMA time series. Redundance. Causality of ARMA t.s. Necessary and sufficient conditions to get causality. Recursive relations to get the MA representation of infinite order. The function ARMAtoMA in R. Simulations of ARMA models in R.Invertibility. The ACF generating function. Transformation of the ARMA equation to recover a stationary solution which is causale and invertible.}
+\end{center}
+
+\begin{definition}
+    $(X_t)\sim ARMA(p,q)$ not redundant if and only if
+    \[
+        \theta(Z)=0\ \ \ and\ \ \ \phi(Z)=0  
+    \]
+    have no common roots.
+\end{definition}
+
+\begin{example}
+    Consider $(W_t)\sim\mathcal{WN}(0,\sigma^2)$ and the equation $X_t=W_t\ \forall t\in\Z$. Then the solution of this equation is equal to the solution of the equation $0.5X_{t-1}=0.5W_{t-1}$. Subtracting these two equations from each other we obtain that
+    \[
+        X_t-0.5X_{t-1}=W_t-0.5W_{t-1}  
+    \] 
+    which is an $ARMA(1,1)$ model. So the initial white noise has an ARMA representation, since $\theta(Z)=\phi(Z)=1-0.5Z$. But this is false: common factors between AR and MA polynomial have to be removed, since there are redundant parameters in the model.
+\end{example}
+
+\begin{example}
+    Consider $X_t=0.4X_{t-1}+0.45X_{t-2}+W_t+W_{t-1}+0.25W_{t-2}$ which is equal to
+    \[
+        (1-0.4B-0.45B^2)X_t=(1+B+0.25B^2)W_t
+    \]
+    We then have that
+    \[
+        \theta(Z)=1-0.4Z-0.45Z^2=(1+0.5Z)(1-0.9Z)  
+    \]
+    and 
+    \[
+        \phi(Z)=1+Z+0.25Z^2=(1+0.5Z)^2 
+    \]
+    which have a common factor. By removing it we obtain
+    \[
+        (1-0.9B)X_t=(1+0.5B)W_t
+    \]
+    which corresponds to $X_t=0.9X_{t-1}+W_t+0.5W_{t-1}$, which is an ARMA(1,1) model.
+\end{example}
+
+\begin{exercise}
+    Suppose
+    \begin{enumerate}
+        \item A a random variable with $\expect{A}=0$ and $\expect{A^2}<\infty$
+        \item $(X_t)\sim ARMA(p,q)$ not redundant
+        \item $cov(A,X_t)=0\ \forall t\in\Z$
+        \item $Z_0\in\C$ such that $\abs{Z_0}=1$
+    \end{enumerate}
+    Prove that $(X_t)$ and $(X_t+AZ_0^t)$ are both stationary solutions of
+    \[
+        (1-Z_0B)\theta(B)X_t=(1-Z_0B)\phi(B)W_t
+    \]
+\end{exercise}
+
+In the following we will assume that the ARMA model are not redundant.
+
+\begin{definition}
+    $(X_t)\sim ARMA(p,q)$ is causal if
+    \[
+        \exists\set{\psi_j}_{j\ge0}\ with\ \sum_{j\ge0}\abs{\psi_j}<\infty\ such\ that\ X_t=\sum_{j\ge0}\psi_jW_{t-j}  
+    \]
+    with $(W_t)\sim\mathcal{WN}(0,\sigma^2)$.
+\end{definition}
+
+The ARMA model have a number of useful properties: as $X_t=\psi(B)W_t$ and
+\begin{itemize}
+    \item $(W_t)$ is $\el{2}$-bounded
+    \item $\set{\psi_j}$ such that $\sum_{j\ge0}\abs{\psi_j}<\infty$
+\end{itemize}
+we have that
+\begin{itemize}
+    \item $(X_t)$ is the unique solution of the ARMA equation
+    \item ACF: $\gamma_X(h)=\sigma^2\sum_{j\ge0}\psi_j\psi_{j+\abs{h}}$
+\end{itemize}
+
+\begin{proposition}
+    If $(X_t)$ causal then $\sum_{h\in\Z}\abs{\gamma_X(h)}<\infty$
+\end{proposition}
+
+\begin{proof}
+    Consider
+    \[
+        \sigma^2\sum_{h\in\Z}\abs{\sum_{j\ge0}\psi_j\psi_{j+\abs{h}}}\le\sigma^2\sum_{h\in\Z}\sum_{j\ge0}\abs{\psi_j}\abs{\psi_{j-\abs{h}}} 
+    \]
+    Now observe that
+    \begin{itemize}
+        \item $h=0$: $\sum_{j\ge0}\abs{\psi_j}\abs{\psi_{j-\abs{h}}}=\sum_{j\ge0}\psi_j^2$
+        \item $h=\pm1$: $\sum_{j\ge0}\abs{\psi_j}\abs{\psi_{j-\abs{h}}}=\sum_{j\ge0}\abs{\psi_j}\abs{\psi_{j+1}}$
+        \item $h=\pm2$: $\sum_{j\ge0}\abs{\psi_j}\abs{\psi_{j-\abs{h}}}=\sum_{j\ge0}\abs{\psi_j}\abs{\psi_{j+2}}$
+        \item ...
+    \end{itemize}
+    the sum of all these terms results then in $\left(\sum_{j\ge0}\abs{\psi_j}\right)^2$ that, since $(X_t)$ is causal, is finite.
+\end{proof}
+
+\begin{corollary}
+    $\lim_h\gamma_X(h)=0\implies$ ergodicity in mean; also, if $(X_t)$ is Gaussian then it has the covariance ergodic property.
+\end{corollary}
+
+Recall that
+\begin{itemize}
+    \item $\sum_{h\in\Z}\abs{\gamma_X(h)}<\infty\implies(X_t)$ is short memory
+    \item $\sum_{h\in\Z}\abs{\gamma_X(h)}=+\infty\implies(X_t)$ is long memory
+\end{itemize}
+
+\begin{theorem}
+    \label{theorem9}
+    Suppose $(X_t)\sim AMRA(p,q)$, then
+    \[
+        (X_t)\ causal\iff\theta(Z)\ne0\ \forall Z\in\C\ such\ that\ \abs{Z}\le1  
+    \]
+\end{theorem}
+
+\begin{corollary}
+    $X_t=\psi(B)W_t$ with $W_t\mathcal{WN}(0,\sigma^2)$ with $\psi(Z)=\sum_{j\ge0}\psi_jZ^j=\frac{\phi(Z)}{\theta(Z)}$ with $\abs{Z}\le1$.
+\end{corollary}
+
+\begin{proof}
+    We will start with the $\Leftarrow$ part. By hypotesis, we know that
+    \[
+        \exists\delta>0\ such\ that\ \theta^{-1}(Z)=\frac{1}{\theta(Z)}=\sum_{j\ge0}\theta_j^*Z^j\ for\ \abs{Z}<1+\delta  
+    \]
+    in particular this is true as $1+\frac{\delta}{2}<1+\delta$. Computing the limit:
+    \[
+        \lim_j\theta_j^*(1+\frac{\delta}{2})^j=0  
+    \]
+    so
+    \[
+        \exists k\in(0,+\infty)\ and\ \tilde{j}\ge0  
+    \]
+    such that
+    \[
+        \abs{\theta_j^*}\left(1+\frac{\delta}{2}\right)^j<k\implies\abs{\theta_j^*}<k\left(1+\frac{\theta}{2}\right)^{-j}  
+    \]
+    with $j\ge\tilde{j}$. This lead to
+    \[
+        \sum_{j\ge\tilde{j}}\abs{\theta_j*}<k\sum_{j\ge\tilde{j}}\left(1+\frac{\delta}{2}\right)^{-j}<\infty
+    \]
+    since $1+\frac{\delta}{2}>1$. Now consider
+    \[
+        \psi(Z)=\theta^{-1}(Z)\phi(Z)  
+    \]
+    and, in particular
+    \[
+        \phi(Z)=\sum_{j\ge0}\tilde{\phi}_jZ^j\ where\ 
+        \begin{cases}
+            1&j=0\\
+            \phi_j&j=1,...,q\\
+            0&j>q\\
+        \end{cases}
+    \]
+    Therefore
+    \[
+        \psi(Z)=\sum_{j\ge0}\psi_jZ^j\implies\set{\psi_j}=\set{\theta_j^*}*\set{\tilde{\phi}_j}
+    \]
+    this means that $\psi_j=\sum_{k=0}^j\theta_k^*\tilde{\theta}_{j-k}$. Therefore
+    \[
+        \abs{\psi_j}\le\sum_{k=0}^j\abs{\theta_k^*}\abs{\tilde{\phi}_{j-k}}\implies\sum_{j\ge0}\abs{\psi_j}\le\sum_{j\ge0}\left(\sum_{k=0}^j\abs{\theta_k^*}\abs{\tilde{\phi}_{j-k}}\right) 
+    \]
+    where the last term is the coefficient of order j of $\set{\abs{\theta_j^*}}*\set{\abs{\tilde{\phi}_j}}$; so it is equal to
+    \[
+        \left(\sum_{k=0}^j\abs{\theta_k^*}\abs{\tilde{\phi}_{j-k}}\right)=\left(\sum_{j\ge0}\abs{\theta_j^*}\right)\left(\sum_{j\ge0}\abs{\tilde{\phi_j}}\right)<\infty\infty\implies\set{\psi_j}\ absolutely\ sommable
+    \]
+    Now consider $\theta(B)X_t=\phi(B)W_t$:
+    \begin{equation*}
+        \begin{split}
+            \theta^{-1}(B)\theta(B)X_t&=\theta^{-1}(B)\phi(B)W_t\\
+            X_t&=\psi(B)W_t\\
+        \end{split}
+    \end{equation*}
+    with $\psi_(B)=\theta^{-1}(B)\phi(B)$. We obtained a causal representation of $X_t$ and also proved the corollary. Now we will see the $\implies$ part. We know that $X_t=\psi(B)W_t$, where
+    \[
+        \psi(Z)=\sum_{j\ge0}\psi_jZ^j\ \ \ with\ \ \ \sum_{j\ge0}\abs{\psi_j}<\infty
+    \]
+    Apply $\theta(B)$ to both sides of the equation:
+    \[
+        \theta(B)X_t=\theta(B)\psi(B)W_t=\theta(Z)\psi(Z)W_t=\eta(Z)W_t
+    \]
+    we have to prove that $\eta(Z)=\phi(Z)$. We know that $\eta(B)W_t=\theta(B)X_t=\phi(B)W_t$ (the last equal by hypotesis. We then kwno that the first and last memeber are equal and the equality is equal to
+    \[
+        \sum_{j\ge0}\eta_jW_{t-j}=\sum_{j=0}^q\phi_jW_{t-j}  
+    \]
+    Multiply both sides by $W_{t-k}$ and take the expectation:
+    \[
+        \expect{\sum_{j\ge0}\eta_jW_{t-j}W_{t-k}}=\sum_{j=0}^q\phi_j\expect{W_{t-j}W_{t-k}} 
+    \]
+    We know that we can exchange summation ad expectation if $\sum_{j\ge0}\abs{\eta_j}\expect{\abs{W_{t-j}W_{t-k}}}<\infty$. We already know that $\expect{\abs{W_{t-j}W_{t-k}}}\le\sigma^2$, so we must prove that $\sum_{j\ge0}\abs{\eta_j}<\infty$. Consider that $\eta(Z)=\theta(Z)\psi(Z)$ and
+    \[
+        \sum_{j\ge0}\tilde{\theta}_jZ^j\ \ \ with\ \ \ 
+        \begin{cases}
+            1&j=0\\
+            -\theta_j&J=1,...,p\\
+            0&j>p\\
+        \end{cases}
+    \]
+    then $\set{\eta_j}=\set{\tilde{\theta}_j}*\set{\psi_j}$. As before
+    \[
+        \sum_{j\ge0}\abs{\eta_j}\le\sum_{j\ge0}\left(\sum_{k=0}^j\abs{\tilde{\theta}_k}\abs{\psi_{j-k}}\right)=\left(\sum_{j\ge0}\abs{\tilde{\theta}_j}\right)\left(\sum_{j\ge0}\abs{\psi_j}\right)<\infty\infty
+    \]
+    So now we can exchange summation and expectation:
+    \[
+        \sum_{j\ge0}\eta_j\expect{W_{t-j}W_{t-k}}=\sum_{j=0}^q\phi_j\expect{W_{t-j}W_{t-k}}
+    \]
+    We have that
+    \begin{itemize}
+        \item $k=0\implies\expect{W_{t-j}W_t}\ne0\iff j=0\implies\eta_0=\phi_0=1$
+        \item $k=1\implies\expect{W_{t-j}W_{t-1}}\ne0\iff j=1\implies\eta_1=\phi_1$
+        \item ...
+        \item $k=q\implies\expect{W_{t-j}W_{t-q}}\ne0\iff j=q\implies\eta_q=\phi_q$
+        \item $k>q\implies\expect{W_{t-j}W_{t-k}}=0\implies\eta_k=0$
+    \end{itemize}
+    implying that $\eta(Z)=\phi(Z)$ and $\psi(Z)=\frac{\phi(Z)}{\theta(Z)}$ for $Z\in\C$ such that $\theta(Z)\ne0$. Now suppose $\exists Z_0\in\C$ such that $\abs{Z_0}\le1$ and $\theta(Z_0)=0$. Then
+    \[
+        \theta(Z_0)\psi(Z_0)=\eta(Z_0)=\phi(Z_0)  
+    \]
+    knowing that $\theta(Z_0)=0$ and that
+    \[
+        \abs{\psi(Z_0)}\le\sum_{j\ge0}\abs{\psi_j}\abs{Z_0}^0\le\sum_{j\ge0}\abs{\psi_j}<\infty
+    \]
+    we can state that $\theta(Z_0)=0=\phi(Z_0)$, implying that $Z_0$ is a common root, but this impossible, since $(X_t)$ is not redundant.
+\end{proof}
+
+How to compute $\set{\psi_j}$ in $X_t=\psi(B)W_t$? We have that $\theta(Z)\psi(Z)=\phi(Z)$, where
+\[
+    \theta(Z)=\sum_{k\ge0}\tilde{\theta}_kZ^k\ \ \ with\ \ \ \tilde{\theta}_k=
+    \begin{cases}
+        1&k=0\\
+        -\theta_k&k=1,...,p\\
+        0&k>p\\
+    \end{cases}  
+\]
+and
+\[
+    \phi(Z)=\sum_{k\ge0}\tilde{\phi}_kZ^k\ \ \ with\ \ \ \tilde{\phi}_k=
+    \begin{cases}
+        1&k=0\\
+        \phi_k&k=1,...,p\\
+        0&k>p\\
+    \end{cases}   
+\]
+implying that $\set{\tilde{\phi}_k}=\set{\tilde{\theta}_k}*\set{\psi_k}$, from which we observe that
+\begin{equation}
+    \begin{split}
+        \tilde{\phi}_k&=\sum_{j=0}^k\tilde{\theta}_j\psi_{k-j}=\psi_k+\sum_{j=1}^k\tilde{\theta}_j\psi_{k-j}\\
+        \psi_j&=\tilde{\phi}_k-\sum_{j=1}^k\tilde{\theta}_j\psi_{k-j}\ for\ k=0,1,...
+    \end{split}
+\end{equation}
+So, for example, if $p,q>2$ then $\psi_0=\tilde{\phi}_0=1,\ \psi_1=\tilde{\phi}_1-\tilde{\phi}_1\psi_0=\phi_1+\theta_1\psi_0,\ \phi_2=\tilde{\phi}_2-\tilde{\theta}_1\psi_0-\tilde{\theta}_2\psi_1=\phi_2+\theta_1\psi_0+\theta_2\psi_1$.
+
+\begin{exercise}
+    Suppose $(X_t)\sim ARMA(2,1)$ such that 
+    \[
+        X_t=X_{t-1}-\frac{1}{4}X_{t-2}+W_t+W_{t-1}  
+    \]
+    \begin{enumerate}
+        \item Prove that $(X_t)$ is not reduntant and that it is causal;
+        \item find $\set{\psi_j}$ of the causal representation of $(X_t)$;
+        \item find the ACF.
+    \end{enumerate}
+\end{exercise}
+
+\begin{exercise}
+    Let $(X_t)\sim ARMA(1,1)$:
+    \begin{enumerate}
+        \item what is the condition on $\theta_1$ such that $(X_t)$ is causal?
+        \item Find the ACF of $(X_t)$.
+    \end{enumerate}
+\end{exercise}
+
+\begin{theorem}
+    If $\theta(Z)\ne0\ \forall Z\in\C$ such that $\abs{Z}=1$ then $\exists!(X_t)$ such that $Z_t=\psi(B)W_t$ with $\psi(Z)=\frac{\phi(Z)}{\theta(Z)}$ for $\frac{1}{r}<\abs{Z}<r$ and $r>1$.
+\end{theorem}
+
+\begin{example}
+    There is a function in R allowing us to retrieve the coefficients $\psi_j$:
+    \begin{verbatim}
+#################################### 
+# ARMA to MA
+####################################
+
+# AR(0.9)
+psi=ARMAtoMA(ar=c(0.9),lag.max=80)
+# theoretical coefficients psi_i=theta^i 
+theta= numeric(80)
+theta[1]=0.9
+for (i in 2:80){theta[i]=theta[i-1]*0.91
+
+# plot and compare
+windows()
+plot(psi,ylab='weights',main='coeff. LF',type='o') 
+lines(theta,col='red')
+
+# MA(0.4) 
+psi=ARMAtoMA(ma=c(0.4),lag.max=80)
+
+# Example (1-B+0.2513^2)X_t=(l+B)W_t
+#
+# ar=c(1.0,-0.25),ma=c(1)
+#
+# redundance?
+library(polynom)
+
+# for AR(1.0,-0.25)
+(roots=solve(polynomial(c(1,-1.0,+0.25)))) 
+# for MA(1)
+(roots=solve(polynomial(c(1,1))))
+
+# ARMA to MA
+psi=ARMAtoMA(ar=c(1.0,-0.25),ma=c(1),lag.max=80) 
+plot(psi,ylab='weights',main='coeff. LF',type='o')
+    \end{verbatim}
+\end{example}
+
+\begin{example}
+    Simulate and plot a path of 
+    \begin{enumerate}
+        \item $X_t=0.9X_{t-1}+W_t-0.5W_{t-1}$
+        \item $X_t=0.55X_{t-1}+W_t-0.5W_{t-1}$
+        \item $X_t=X_{t-1}-0.25X_{t-2}+W_t-0.5W_{t-1}$
+    \end{enumerate}
+    with $n=200$ and $seed=154$. Plot also the ACF.
+    \begin{verbatim}
+#################################### 
+# Simulation of paths from ARMA(p,q) 
+####################################
+
+set.seed(154)
+# simulate ARMA(1,1) with theta_1=0.9 and phi_1=-0.5 
+arma.siml=arima.sim(list(ar=c(0.9),ma=c(-0.5)),200)
+# simulate ARMA(1,1) with theta_1=0.55 and phi_1=-0.5 
+arma.sim2=arima.sim(list(ar=c(0.55),ma=c(-0.5)),200)
+# simulate ARMA(2,1) with theta 1=1, theta2=-0.25 and phi 1=-0.5 
+arma.sim3=arima.sim(list(ar=c(1.0,-0.25),ma=c(-0.5)),200)
+
+# plot the paths
+minr=min(cbind(arma.siml,arma.sim2,arma.sim3)) 
+maxr=max(cbind(arma.siml,arma.sim2,arma.sim3)) 
+windows()
+par(mfrow=c(3,1))
+plot(arma.sim1,type='o',main='ARMA(1,1): theta_1=0.9 and 
+phi_1=-0.5',ylim=c(minr,maxr)) 
+plot(arma.sim2,type='o',main='ARMA(1,1): theta_1=0.55 and 
+phi_1=-0.5',ylim=c(minr,maxr)) 
+plot(arma.sim3,type='o',main='ARMA(2,1): theta_1=1,theta2=-0.25 and 
+phi1=-0.5',ylim=c(minr,maxr))
+
+#plot the ACF
+windows()
+par(mfrow=c(1,3))
+acf(arma.sim1, lag.max=50, main='ARMA (0.9,-0.5)', ylim=c(-1,1))
+acf(arma.sim2, lag.max=50, main='ARMA (0.55,-0.5)', ylim=c(-1,1))
+acf(arma.sim3, lag.max=50, main='ARMA (1, -0.25; -0.5)', ylim=c(-1,1))
+    \end{verbatim}
+\end{example}
+
+\begin{definition}
+    Suppose $(X_t)\sim ARMA(p,q)$ is invertible if 
+    \[
+        \exists\set{\pi_j}\ such\ that\ \sum_{j\ge0}\abs{\pi_j}<\infty\ such\ that\ W_t=\pi(B)X_t\ \forall i\in\Z
+    \]
+    with $\pi(Z)=\sum_{j\ge0}\pi_jZ^j$.
+\end{definition}
+
+\begin{theorem}
+    Let $(X_t)\sim ARMA(p,q)$ not redundant; then
+    \[
+        (X_t)\ is\ invertible \iff\phi(Z)\ne0\ \forall Z\in\C\ such\ that\ \abs{Z}\le1 
+    \]
+\end{theorem}
+
+\begin{corollary}
+    $\set{\pi_j}$ in $\pi(Z)=\sum_{j\ge0}\pi_jZ^j$ are such that $\pi(Z)=\frac{\theta(Z)}{\phi(Z)}$ with $\abs{Z}\le1$.
+\end{corollary}
+
+\begin{corollary}
+    If $(X_t)\sim ARMA(p,q)$ is not redundant and
+    \[
+        \theta(Z)\phi(Z)\ne0\ \forall z\in\C\ such\ that\ \abs{Z}\le1  
+    \] 
+    then $(X_t)$ is causal and invertible.
+\end{corollary}
+
+\begin{definition}
+    Suppose $(X_t)$ stationary. The \textbf{ACF generating function} is $G(Z)=\sum_{h\in\Z}\gamma_X(h)Z^h$ provided that $G(Z)<\infty\ \forall Z\in\C$ such that $\frac{1}{r}<\abs{Z}<r$ with $r>1$. 
+\end{definition}
+
+\begin{example}
+    $(W_t)\sim\mathcal{WN}(0,\sigma^2)\implies G(Z)=\sigma^2$
+\end{example}
+
+\begin{lemma}
+    Let $(X_t)$ be a linear time series, $X_t=\psi(B)W_t$. If $\exists r>1$ such that $\sum_{j\in\Z}\abs{\psi_j}Z^j<\infty\ \forall Z\in\C$ such that $\frac{1}{r}<\abs{Z}<r$ then
+    \[
+        G(Z)=\sigma^2\psi(Z)\psi(Z^{-1})
+    \]
+\end{lemma}
+
+\begin{proof}
+    Consider
+    \[
+        \psi(Z)\psi(Z^{-1})=\left(\sum_{j\in\Z}\psi_jZ^j\right)\left(\sum_{j\in\Z}\psi_jZ^{-j}\right)=\left(\sum_{j\in\Z}\psi_jZ^j\right)\left(\sum_{k\in\Z}\psi_kZ^k\right)  
+    \]
+    This is a new Laurent series:
+    \[
+        =\sum_{i\in\Z}\psi_i^*Z^i\ \ \ with\ \ \ \set{\psi_j^*}=\set{\psi_j}*\set{\psi_{-k}}  
+    \]
+    with
+    \[
+        \psi_j^*=\sum_{k\in\Z}\psi_k\psi_{(i-k)}=\sum_{k\in\Z}\psi_k\psi_{k-i}=\frac{\gamma_X(i)}{\sigma^2} 
+    \]
+    Then
+    \[
+        G(Z)=\sum_{h\in\Z}\gamma_X(h)Z^h=\sigma^2\sum_{h\in\Z}\psi_h^*Z^h=\sigma^2\psi(Z)\psi(Z^{-1})  
+    \]
+\end{proof}
+
+\begin{example}
+    Suppose $(X_t)\sim ARMA(p,q)$ with $\theta(0)\ne0\ \forall Z\in\C$ such that $\abs{Z}=1$. Then $\exists!(X_t)$ such that $X_t=\psi(B)W_t$ with $\psi(Z)=\frac{\phi(Z)}{\theta(Z)}$ for $\frac{1}{r}<\abs{Z}<r$ with $r>1$. Therefore, from the lemma, we have that
+    \[
+        G(Z)=\sigma^2\frac{\phi(Z)}{\theta(Z)}\frac{\phi(Z^{-1})}{\theta(Z^{-1})}  
+    \]
+\end{example}
+
+\begin{theorem}
+    \label(theorem11)
+    Suppose $(X_t)\sim ARMA(p,q)$ with $\theta(Z)\ne0,\ \phi(Z)\ne0\ \forall Z\in\C$ such that $\abs{Z}=1$; then $\exists\tilde{\phi}(Z)$ and $\tilde{\theta}(Z)$ with
+    \[
+        degree(\tilde{\phi})=q\ \ \ degree(\tilde{\theta})=p  
+    \]
+    such that
+    \[
+        \tilde{\theta}(Z)\tilde{\phi}(Z)\ne0\ \ \ for\ \abs{Z}\le1  
+    \]
+    ans $\exists(W_t^*)\sim\mathcal{WN}(0,\sigma_{W^*}^2)$ such that $(X_t)$ is the causal and invertible solution to the equation $\tilde{\theta}(B)X_t=\tilde{\phi})(B)W_t^*\ \forall t\in\Z$.
+\end{theorem}
+
+\begin{proof}
+    Suppose $a_{r+1},...,a_p$ roots of $\theta(Z)$ such that $\abs{a_{r+1}},...,\abs{a_p}<1$; then $a_{r+1},...,a_p$ are roots of $\prod_{j=r+1}^p\left(1-\frac{Z}{a_j}\right)$. Consider
+    \[
+        degree\left(\frac{\theta(Z)}{\prod_{j=r+1}^p\left(1-\frac{Z}{a_j}\right)}\right)<p\implies\tilde{\theta(Z)}=\frac{\theta(Z)}{\prod_{j=r+1}^p\left(1-\frac{Z}{a_j}\right)}\prod_{j=r+1}^p(1-Za_j)
+    \]
+    Note that the roots of $\prod_{j=s+1}^p(1-Za_j)$ are $\frac{1}{a_j}$ for $j=s+1,...,p$. Now consider $b_{j+1},...,b_q$ the roots of $\phi(Z)$ such that $\abs{b_{j+1},...,\abs{b_1}}<1$. Consider
+    \[
+        \tilde{\phi}(Z)=\frac{\phi(Z)}{\prod_{j=s+1}^q\left(1-\frac{Z}{b_j}\right)}\prod_{j=s+1}^q\left(1-b_jZ\right)
+    \]
+    We have that $\tilde{\theta}(Z)\tilde{\phi}(0)\ne0$ for $\abs{Z}\le1$. Define now $W_t^*=\frac{\tilde{\theta}(B)}{\tilde{\phi}(B)}X_t\ \forall t\in\Z$. We have to prove that $(W_t^*)\sim \mathcal{WN}$. Observe that
+    \begin{equation*}
+        \begin{split}
+            W_t^*&=\frac{\frac{\prod_{j=r+1}^p(1-a_jB)}{\prod_{j=r+1}^p\left(1-\frac{B}{a_j}\right)}}{\frac{\prod_{j=s+1}^q(1-b_jB)}{\prod_{j=s+1}^q\left(1-\frac{B}{b_j}\right)}}\frac{\theta(B)}{\phi(B)}X_t\\
+            &=\frac{\frac{\prod_{j=r+1}^p(1-a_jB)}{\prod_{j=r+1}^p\left(1-\frac{B}{a_j}\right)}}{\frac{\prod_{j=s+1}^q(1-b_jB)}{\prod_{j=s+1}^q\left(1-\frac{B}{b_j}\right)}}W_t\\
+            &=\frac{\prod_{j=r+1}^p(1-a_jB)\prod_{j=s+1}^q\left(1-\frac{B}{b_j}\right)}{\prod_{j=r+1}^p\left(1-\frac{B}{a_j}\right)\prod_{j=s+1}^q(1-b_jB)}W_t
+        \end{split}
+    \end{equation*}
+\end{proof}
