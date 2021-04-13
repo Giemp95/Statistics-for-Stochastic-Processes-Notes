@@ -18,7 +18,7 @@
     \[
         X_t-0.5X_{t-1}=W_t-0.5W_{t-1}  
     \] 
-    which is an $ARMA(1,1)$ model. So the initial white noise has an ARMA representation, since $\theta(Z)=\phi(Z)=1-0.5Z$. But this is false: common factors between AR and MA polynomial have to be removed, since there are redundant parameters in the model.
+    which is an $ARMA(1,1)$ model. So the initial white noise has an ARMA representation, since $\theta(Z)=\phi(Z)=1-0.5Z$. However, this is false: common factors between AR and MA polynomial have to be removed since there are redundant parameters in the model.
 \end{example}
 
 \begin{example}
@@ -34,7 +34,7 @@
     \[
         \phi(Z)=1+Z+0.25Z^2=(1+0.5Z)^2 
     \]
-    which have a common factor. By removing it we obtain
+    which have a common factor. By removing it, we obtain
     \[
         (1-0.9B)X_t=(1+0.5B)W_t
     \]
@@ -55,7 +55,7 @@
     \]
 \end{exercise}
 
-In the following we will assume that the ARMA model are not redundant.
+In the following, we will assume that the ARMA models are not redundant.
 
 \begin{definition}
     $(X_t)\sim ARMA(p,q)$ is causal if
@@ -118,7 +118,7 @@ Recall that
 \end{corollary}
 
 \begin{proof}
-    We will start with the $\Leftarrow$ part. By hypotesis, we know that
+    We will start with the $\Leftarrow$ part. By hypothesis, we know that
     \[
         \exists\delta>0\ such\ that\ \theta^{-1}(Z)=\frac{1}{\theta(Z)}=\sum_{j\ge0}\theta_j^*Z^j\ for\ \abs{Z}<1+\delta  
     \]
@@ -178,7 +178,7 @@ Recall that
     \[
         \theta(B)X_t=\theta(B)\psi(B)W_t=\theta(Z)\psi(Z)W_t=\eta(Z)W_t
     \]
-    we have to prove that $\eta(Z)=\phi(Z)$. We know that $\eta(B)W_t=\theta(B)X_t=\phi(B)W_t$ (the last equal by hypotesis. We then kwno that the first and last memeber are equal and the equality is equal to
+    We have to prove that $\eta(Z)=\phi(Z)$. We know that $\eta(B)W_t=\theta(B)X_t=\phi(B)W_t$ (the last equal by hypothesis. We then know that the first and last members are equal and the equality is equal to
     \[
         \sum_{j\ge0}\eta_jW_{t-j}=\sum_{j=0}^q\phi_jW_{t-j}  
     \]
@@ -219,7 +219,7 @@ Recall that
     \[
         \abs{\psi(Z_0)}\le\sum_{j\ge0}\abs{\psi_j}\abs{Z_0}^0\le\sum_{j\ge0}\abs{\psi_j}<\infty
     \]
-    we can state that $\theta(Z_0)=0=\phi(Z_0)$, implying that $Z_0$ is a common root, but this impossible, since $(X_t)$ is not redundant.
+    we can state that $\theta(Z_0)=0=\phi(Z_0)$, implying that $Z_0$ is a common root, but this impossible since $(X_t)$ is not redundant.
 \end{proof}
 
 How to compute $\set{\psi_j}$ in $X_t=\psi(B)W_t$? We have that $\theta(Z)\psi(Z)=\phi(Z)$, where
@@ -450,7 +450,26 @@ acf(arma.sim3, lag.max=50, main='ARMA (1, -0.25; -0.5)', ylim=c(-1,1))
         \begin{split}
             W_t^*&=\frac{\frac{\prod_{j=r+1}^p(1-a_jB)}{\prod_{j=r+1}^p\left(1-\frac{B}{a_j}\right)}}{\frac{\prod_{j=s+1}^q(1-b_jB)}{\prod_{j=s+1}^q\left(1-\frac{B}{b_j}\right)}}\frac{\theta(B)}{\phi(B)}X_t\\
             &=\frac{\frac{\prod_{j=r+1}^p(1-a_jB)}{\prod_{j=r+1}^p\left(1-\frac{B}{a_j}\right)}}{\frac{\prod_{j=s+1}^q(1-b_jB)}{\prod_{j=s+1}^q\left(1-\frac{B}{b_j}\right)}}W_t\\
-            &=\frac{\prod_{j=r+1}^p(1-a_jB)\prod_{j=s+1}^q\left(1-\frac{B}{b_j}\right)}{\prod_{j=r+1}^p\left(1-\frac{B}{a_j}\right)\prod_{j=s+1}^q(1-b_jB)}W_t
+            &=\frac{\prod_{j=r+1}^p(1-a_jB)\prod_{j=s+1}^q\left(1-\frac{B}{b_j}\right)}{\prod_{j=r+1}^p\left(1-\frac{B}{a_j}\right)\prod_{j=s+1}^q(1-b_jB)}W_t\\
+            &=\tilde{\psi}(B)W_t
         \end{split}
     \end{equation*}
+    Then $(W_t^*)$ is a linear time series, since
+    \[
+        \tilde{\psi}(Z)=\frac{\prod_{j=r+1}^p(1-a_jZ)\prod_{j=s+1}^q\left(1-\frac{Z}{b_j}\right)}{\prod_{j=r+1}^p\left(1-\frac{Z}{a_j}\right)\prod_{j=s+1}^q(1-b_jZ)}
+    \]
+    implies that $\exists\tilde{r}>1$ such that $\abs{\tilde{\psi}(Z)}<\infty$ for $\frac{1}{\tilde{r}}<\abs{Z}<\tilde{r}$, further implying that $\sum_{j\ge0}\abs{\tilde{\psi}_j}<\infty$. From the lemma of the covariance generating function, we can state that
+    \begin{equation*}
+        \begin{split}
+            G_{W^*}(Z)&=\sigma^2\tilde{\psi}(Z)\tilde{\psi}(Z^{-1})\\
+            &=...\\
+            &=\sigma^2\frac{\prod_{j=r+1}^p\abs{a_j}^2}{\prod_{j=s+1}^q\abs{b_j}^2}\\
+            &=\sigma_{W^*}^2\\
+        \end{split}
+    \end{equation*}
+    completing the proof.
 \end{proof}
+
+\begin{remark}
+    $\psi(Z)=\frac{\phi(Z)}{\theta(Z)}=\frac{\tilde{\phi}(Z)}{\tilde{\theta}(Z)}\tilde{\psi}(Z)$
+\end{remark}
