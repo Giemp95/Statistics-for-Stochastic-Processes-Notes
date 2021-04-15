@@ -4,3 +4,296 @@
 \begin{center}
     \textbf{ARMA models. From data to models. The Yule-Walker estimators. Invertible covariance matrix. Partial autocorrelation function. Best linear predictors: projection theorem and mean square error.}
 \end{center}
+
+Now we will look how to fit the ARMA model to the data. 
+
+If the ACF shows a cutoff after a certain lag, we can guess a MA model; after having choosed the order $q$, we can estimate the coefficients $\phi_j$ is to equate the first $q$ theoretical ACF values to the sample correlation values, and find the solution of the implies syste of equations:
+\[
+    \begin{cases}
+    \rho_X(1)=\frac{\phi_1+\phi_1\phi_2+\phi_2\phi_3}{1+\phi_1^2+\phi_2^2+\phi_3^2}=\hat{\rho}_1\\
+    \rho_X(2)=\frac{\phi_2+\phi_1\phi_3}{1+\phi_1^2+\phi_2^2+\phi_3^2}=\hat{\rho}_2\\
+    \rho_X(3)=\frac{\phi_3}{1+\phi_1^2+\phi_2^2+\phi_3^2}=\hat{\rho}_3\\    
+    \end{cases} 
+\]
+but this is not usually the best method.
+
+If the ACF goes to 0 when the lags goes to infinity, a short term memory model is usually a good choiche. If we suppose a AR model of order $q=2$, we can estimate the parameters of the model by using the YW equations:
+\begin{equation*}
+    \begin{split}
+        \gamma_X(0)-\theta_1\gamma_X(-1)-\theta_2\gamma_X(-2)=\sigma^2\\
+        \gamma_X(1)-\theta_1\gamma_X(0)-\theta_2\gamma_X(-1)=0\\
+        \gamma_X(2)-\theta_1\gamma_X(1)-\theta_2\gamma_X(0)=0\\
+        ...\\
+    \end{split}
+\end{equation*}
+Considering the property $\gamma_X(h)=\gamma_X(-h)$, we obtain the system
+\[
+    \begin{cases}
+        \gamma_X(1)=\theta_1\gamma_X(0)+\theta_2\gamma_X(1)\\
+        \gamma_X(2)=\theta_1\gamma_X(1)+\theta_2\gamma_X(0)\\
+    \end{cases}
+\]
+that can be rewritten as
+\[
+    \begin{pmatrix}
+        \gamma_X(1)\\
+        \gamma_X(2)\\
+    \end{pmatrix}  
+    =
+    \begin{pmatrix}
+        \gamma_X(0)&\gamma_X(1)\\
+        \gamma_X(1)&\gamma_X(0)\\
+    \end{pmatrix}
+    \begin{pmatrix}
+        \theta_1\\
+        \theta_2\\
+    \end{pmatrix}
+\]
+or, equvalently
+\[
+    \boldsymbol{\gamma}_{(2)}=\boldsymbol{\Gamma}_2\boldsymbol{\theta}_2  
+\]
+Then, the Yule-Walker's estimator of $(\theta_1,\theta_2)$ is
+\[
+    \hat{\boldsymbol{\gamma}}_{(2)}=\hat{\boldsymbol{\Gamma}}_2\hat{\boldsymbol{\theta}}_2 
+\]
+What about $\sigma^2$?
+\[
+    \sigma^2=\gamma_X(0)-\theta_1\gamma_X(1)-\theta_2\gamma_X(2)=\gamma_X(0)-
+    \begin{pmatrix}
+        \gamma_X(1)&\gamma_X(2)\\
+    \end{pmatrix}
+    \begin{pmatrix}
+        \theta_1\\
+        \theta_2\\
+    \end{pmatrix}
+\]
+So the YW estimator of $\sigma^2$ is
+\[
+    \hat{\sigma}^2=\hat{\gamma}_X(0)-\hat{\boldsymbol{\gamma}}_{(2)}^\intercal\hat{\boldsymbol{\theta}}_2 
+\]
+For $p\in\N$ the YW estimators of $\theta_1,...,\theta_p$ is $\hat{\boldsymbol{\gamma}}_{(p)}=\hat{\boldsymbol{\Gamma}}_p\hat{\boldsymbol{\theta}}_p$ and for $\sigma^2$ is $\hat{\sigma}^2=\hat{\gamma}_X(0)-\hat{\boldsymbol{\gamma}}_{(p)}^\intercal\hat{\boldsymbol{\theta}}_p$. Suppose to have $n$ observations, then we can compute the value of $\hat{\gamma}(h)$ for $h=0,...,n-1$, and we can build
+\[
+    \hat{\boldsymbol{\Gamma}}_p=\left[\hat{\gamma}(i-j)\right]_{i,j=1}^p  
+\]
+then the YW estimation of $\theta_1,...,\theta_n$ is
+\[
+    \hat{\boldsymbol{\Gamma}}_p^{-1}\hat{\boldsymbol{\gamma}}_{(p)}\ \ \ with\ \ \ \hat{\boldsymbol{\gamma}}_{(p)}=(\hat{\gamma}(1),...,\hat{\gamma}(p))^{\intercal}
+\]
+and of $\sigma^2$ is
+\[
+    \hat{\gamma}(0)-\hat{\boldsymbol{\gamma}}_{(p)}^\intercal\hat{\boldsymbol{\Gamma}}_p^{-1}\hat{\boldsymbol{\gamma}}_{(p)}
+\]
+If the sample size is large, then the YW estimator are approximately normally distributed, and the value of $\hat{\sigma}^2$ is close to the true value. In this sense, the YW estimators are optimal.
+
+\begin{theorem}
+    \label{theorem12}
+    Suppose $(X_t)$ stationary, $\gamma(0)>0$ and $\lim_h\gamma(h)=0$. Then the covariance matrix of $(X_1,...,X_n)^\intercal$ $\Gamma_n=[\gamma(i-j)]_{i,j=1}^n$ is non-singular $\forall n\ge1$.
+\end{theorem}
+
+\begin{lemma}
+    Suppose $\Sigma$ is the covariance matrix of a column matrix $(X_1,...,X_n)^\intercal$. Then $\Sigma$ is singular if and only if $\exists \boldsymbol{b}=(b_1,...,b_n)^\intercal\ne0$ such that $Var(\boldsymbol{b}^\intercal\boldsymbol{X})=0$.
+\end{lemma}
+
+\begin{proof}
+    Suppose the covariance matrix $\Gamma_n$ singular for some $n$. As $\gamma(0)>0$ then $\exists r\ge1$ such that $\Gamma_r$ is non-singular and $\Gamma_{r+1}$ is singular $(r+1\le n)$. According to the previous lemma:
+    \[
+        X_{r+1}=\sum_{j=1}^ra_jX_j  
+    \]
+    but from stationarity we also know that
+    \[
+        X_{r+(h+1)+1}=\sum_{j=1}^ra_jX_{j+(h-1)}\ \ \ for\ \ \ h\ge1  
+    \]
+    Note that
+    \begin{equation*}
+        \begin{split}
+            X_{r+1}&\implies X_1,...,X_r\\
+            X_{r+2}&\implies X_2,...,X_r,X_{r+1}\implies X_1,...,X_r\\
+            &...\\
+            X_n&\implies X_1,...,X_r\ \ \ as\ r\ge r+1\\
+            X_n&=\sum_{j=1}^ra_j^{(n)}X_j\\
+            X_n&=(\boldsymbol{a}^{(n)})^\intercal \boldsymbol{X}_r
+        \end{split}
+    \end{equation*}
+    with $\boldsymbol{a}^{(n)}=(a_1^{(n)},...,a_r^{(n)})^\intercal$ and $\boldsymbol{X}_r=(X_1,...,X_r)^\intercal$. Now, consider
+    \begin{equation*}
+        \begin{split}
+            \gamma(0)&=\expect{X_n^2}\\
+            &=\expect{\left((\boldsymbol{a}^{(n)})^\intercal\boldsymbol{X}_r\right)\left(\boldsymbol{X}_r^\intercal\boldsymbol{a}^{(n)}\right)}\\
+            &=(\boldsymbol{a}^{(n)})^\intercal\expect{\boldsymbol{X}_r\boldsymbol{X}_r^\intercal}\boldsymbol{a}^{(n)}\\
+            &=(\boldsymbol{a}^{(n)})^\intercal\boldsymbol{\Gamma}_r\boldsymbol{a}^{(n)}\\
+        \end{split}
+    \end{equation*}
+    We know that $\boldsymbol{\Gamma}_r$ is non-singular, so the decomposition
+    \[
+        \boldsymbol{\Gamma}_r=\boldsymbol{P}\boldsymbol{\Lambda}\boldsymbol{P}^\intercal
+    \]
+    where $\boldsymbol{\Lambda}=diag(\lambda_1,...,\lambda_r)$ is the vector af eigenvalues and $P$ is the orthogonal matrix of eigenvectors, so $\boldsymbol{P}\boldsymbol{P}^\intercal=\boldsymbol{I}_r=\boldsymbol{P}^\intercal\boldsymbol{P}$. Moreover, $\boldsymbol{\Gamma}_r$ is non-negative definite, meaning that $0\le\lambda_1\le...\le\gamma_r$. Now we can state that
+    \begin{equation*}
+        \begin{split}
+            \gamma(0)&=(\boldsymbol{a}^{(n)})^\intercal\boldsymbol{P}\boldsymbol{\Lambda}\boldsymbol{P}^\intercal\boldsymbol{a}^{(n)}\\
+            &\ge\lambda_1(\boldsymbol{a}^{(n)})^\intercal\boldsymbol{P}\boldsymbol{I}_r\boldsymbol{P}^\intercal\boldsymbol{a}^{(n)}\\
+            &=\lambda_1(\boldsymbol{a}^{(n)})^\intercal\boldsymbol{I}_r\boldsymbol{a}^{(n)}\\
+            &=\lambda_1(\boldsymbol{a}^{(n)})^\intercal\boldsymbol{a}^{(n)}\\
+            &=\lambda_1\sum_{j=1}^r(a_j^{(n)})^2\\
+        \end{split}
+    \end{equation*}
+    But we also know that
+    \begin{equation*}
+        \begin{split}
+            \gamma(0)&=\expect{X_nX_n}\\
+            &=\expect{X_n\sum_{j=1}^ra_j^{(n)}X_j}\\
+            &=\sum_{j=1}^ra_j^{(n)}\expect{X_nX_j}\\
+            &=\sum_{j=1}^ra_j^{(n)}\gamma(n-j)\\
+            &\le\sum_{j=1}^r\abs{a_j^{(n)}}\abs{\gamma(n-j)}\\
+        \end{split}
+    \end{equation*}
+    and, if we suppose that $n\to\infty$ then this last summation goes to $0$, which is a contradiction, since $\gamma(0)$ is strictly positive, completing the proof.
+\end{proof}
+
+\begin{proposition}
+    If $\set{\tilde{\theta}_i}_{i=1}^p$ are the YW estimates of $\theta_1,...,\theta_p$ then $\tilde{\theta}(Z)=1-\tilde{\theta}_1Z+...-\tilde{\theta}_pZ^p\ne0$ for $\abs{Z}\le1$
+\end{proposition}
+
+\begin{remark}
+    If $\gamma(h)$ is any ACF such that $\gamma(0)>0$ and $\lim_h\gamma(h)=0$ then, for any fixed $p$, there is a causal $AR(p)$ whose ACF at lags $h=0,1,...,p$ is equal to $\gamma(h)$.
+\end{remark}
+
+\begin{exercise}
+    Suppose $\gamma(0)=1$ and $\gamma(\pm1)=\beta$. Find $(X_t)\sim AR(1)$ having $\gamma(0)$ and $\gamma(\pm1)$ as ACF at $h=0, h=\pm1$. Is it possible to find a $MA(1)$ with the same ACF?
+\end{exercise}
+
+\begin{remark}
+    Due to numerical reason, it is more convinient to use the correlation function in order to estimare the AR parameters. Remember that
+    \[
+        \boldsymbol{\rho}_{(p)}=\boldsymbol{R}_p\boldsymbol{\theta}_p\ \ \ where\ \ \ 
+        \begin{cases}
+            \boldsymbol{\rho}_{(p)}=(\rho_X(1),...,\rho_X(p)^\intercal)\\
+            \boldsymbol{R}_p=\left[\rho_X(i-j)\right]_{i,j=1}^p\\
+            \boldsymbol{\theta}_p=(\theta_1,...,\theta_p)^\intercal\\
+        \end{cases}
+    \]
+    and that
+    \[
+        \sigma^2=\gamma_X(0)-(\boldsymbol{\gamma}_{(p)})^\intercal\boldsymbol{\theta}_p=\gamma_X(0)\left(1-\frac{\boldsymbol{\gamma}_{(p)}}{\gamma_X(0)}\boldsymbol{\theta}_p\right)=\gamma_X(0)(1-\boldsymbol{\rho}_{(p)}\boldsymbol{\theta}_{p})
+    \]
+    Suppose to have $n$ observation $(n\ge p)$ and to estimate $\hat{\rho}(h)$ for $h=0,...,n-1$. Set $\hat{\boldsymbol{\rho}}_{(p)}=(\hat{\rho}(1),...,\hat{\rho}(p))^\intercal$ and $\hat{\boldsymbol{R}}_p=\left[\hat{\rho}(i-j)\right]_{i,j=1}^p$. As $\hat{\rho}(0)=1\ne0$ and $\hat{\rho}(h)=0$ for $h>n$, from \ref{theorem12}, there exists $\hat{\boldsymbol{R}}_p^{-1}$ such that
+    \begin{equation*}
+        \begin{split}
+            \hat{\boldsymbol{R}}_p^{-1}\hat{\boldsymbol{\rho}}_{(p)}&\ \ \ estimates\ \ \ (\theta_1,...,\theta_p)\\
+            \hat{\gamma}(0)(1-\hat{\boldsymbol{\rho}}_{(p)}^\intercal\hat{\boldsymbol{R}}_p\hat{\boldsymbol{\rho}}_{(p)})&\ \ \ estimates\ \ \ \sigma^2\\
+        \end{split}
+    \end{equation*} 
+    Observe that the product $\boldsymbol{R}_k^{-1}\boldsymbol{\rho}_{(k)}$ with $k\ge1$ gives the column vector of partial autocorrelation function.
+\end{remark}
+
+\begin{definition}
+    The \textbf{partial auto correlation function (PACF)} of $(X_t)$ stationary is defined as
+    \begin{equation*}
+        \begin{split}
+            \pi_{11}=corr(X_{t+1},X_t)=\rho_X(1)\\
+            \pi_{hh}=corr(X_{t+h}-\tilde{X}_{t+h},X_t-\tilde{X}_t)\\
+        \end{split}
+    \end{equation*}
+    with $h\ge2$ and $\tilde{X}_{t+h},\tilde{X}_t$ are the best linear predictors (BLP) of $X_{t+h},X_t$ given $\set{X_{t+1},...,X_{t+h-1}}$.
+\end{definition}
+
+BLP refers with respect to the mean square error.
+
+\begin{remark}
+    $(X_t)$ stationary $\implies$ with $t=1$
+    \begin{equation*}
+        \begin{split}
+            \pi_{11}&=corr(X_2,X_1)\\
+            \pi_{hh}&=corr(X_{h+1}-\tilde{X}_{h+1},X_1-\tilde{X}_1)\ \ \ h\ge2\\
+            (A)&=\set{X_2,...,X_h}\\
+        \end{split}
+    \end{equation*}
+\end{remark}
+
+Why use BLP and not conditional expectation? Consider $X,Z_1,...,Z_h\in\el{2}(\Omega,H,P)=\el{2}$. Denote with $F=\sigma(Z_1,...,Z_h)$ the generated $\sigma$-algebra. Then $\mean{X}=\expect{X|F}=\expect{X|Z_1,...,Z_h}$ is a random variable such that
+\[
+    \expect{(X-\tilde{X})^2}=\inf_{Y\in\el{2}(\Omega,F,\mathbb{P})}\expect{(X-Y)^2}
+\]
+where $\el{2}(\Omega,F,\mathbb{P})=\set{Y\in\el{2}/Y=f(Z_1,...,Z_h)\ with\ f\ measurable}$. $\mean{X}$ is in this set since $\expect{(X|Z_1,...,Z_h)}=\tilde{f}(Z_1,...,Z_h)$. This conditional expectation is the best function of $Z_1,...,Z_h$ to predict $X$.
+
+\begin{example}
+    If $Z_1,...,Z_h$ is distributed as a multivariate Gaussian distribution, then
+    \[
+        \expect{(X|Z_1,...,Z_h)}=\sum_{j=0}^h\alpha_jZ_j  
+    \]
+    with $Z_0\stackrel{a.s.}{=}1$ and $\alpha_j$ minimize the MSE. So, for Gaussian time series, the conditional expectation gives the BLP.
+\end{example}
+
+Suppose to replace $\el{2}(\Omega,F,\mathbb{P})$ with $sp{1,Z_1,...,Z_h}\subset\el{2}=\set{Y\in\el{2}/Y=\sum_{j=0}^h\tilde{\alpha}_jZ_j}$. The existence of a unique random variable that minimizes the MSE computed on the subspace of linear combinations of $Z_1,...,Z_h$ is granted by the projection theorem.
+
+\begin{theorem}
+    (From the \textbf{projection theorem}). If
+    \begin{itemize}
+        \item $M=\mean{sp}\set{Z_1,...,Z_h}\subset\el{2}$
+        \item $X\in\el{2}$
+    \end{itemize}
+    then
+    \[
+        \exists!\tilde{X}\in M\ such\ that\ \expect{(X-\tilde{X})^2}=\inf_{Y\in M}\expect{(X-Y)^2}  
+    \]
+    $\tilde{X}$ is denoted as $P_MX$ is said the orthogonal projection of $X$ into $M$.
+\end{theorem}
+
+One of the main property of $P_MX$ is that $X-\tilde{X}\in M^\perp=\set{\tilde{Y}\in\el{2}/\expect{Y\tilde{Y}}=0\ \forall Y\in M}$. $M^\perp$ is the orthogonal complement of $M$. If we substitute $X-\tilde{X}\in\el{2}$ to $\tilde{Y}$ we obtain that $\expect{Y(X-\tilde{X})}=0\ \forall Y\in M$. In general this equation is called \textbf{predicion equation}. In general, as $Z_1,...,Z_h\in M$ then $\expect{(X-\tilde{X})Z_i}=0$ with $i=1,...,h$ are called predicion equations. Observe that these equations are the same employed to compute the coefficients of a linear regression over $Z_1,...,Z_h$ with the least square method.
+
+\begin{exercise}
+    Consider $(X_t)$ stationary with constant mean ($\expect{X_t}=\mu\ \forall t\in\Z$). Prove that
+    \[
+        P_{\mean{sp}\set{1,X_t,...,X_{t+h-1}}}(X_{t+h})=\mu+P_{\mean{sp}\set{Y_t,...,Y_{t+h-1}}}(Y_{t+h})  
+    \]
+    where $Y_t=X_t-\mu\ \forall t\in\Z$. This exercise is interesting, beacause if $\mu=0$ then
+    \[
+        P_{\mean{sp}\set{1,X_t,...,X_{t+h-1}}}(X_{t+h})=P_{\mean{sp}\set{X_t,...,X_{t+h-1}}}(X_{t+h})  
+    \]
+    The second memeber of the equation is of particular interest, since we will work with time series with zero mean.
+\end{exercise}
+
+Now we will see how to compute the coefficient of the BLP. Suppose
+\begin{enumerate}
+    \item $\tilde{X}_{h+1}=\alpha_{h-1,1}X_h+...+\alpha_{h-1,h-1}X_2=P_{\mean{sp\set{X_2,...,X_h}}}(X_{h+1})$
+    \item $\tilde{X}_1=\beta_{h-1,1}X_2+...+\beta_{h-1,h-1}X_h=P_{\mean{sp\set{X_2,...,X_h}}}(X_1)$
+\end{enumerate}
+Denote $\boldsymbol{\alpha}_{(h-1)}=(\alpha_{h-1,1};...;\alpha_{h-1,h-1})^\intercal$, $\boldsymbol{\beta}_{(h-1)}=(\beta_{h-1,1};...;\beta_{h-1,h-1})^\intercal$ and $\boldsymbol{\Gamma}_{h-1}=\left[\gamma(i-j)\right]_{i,j=1}^{h-1}$ where $\gamma$ is the ACF of $(X_t)$.
+
+\begin{proposition}
+    If $\Gamma_{h-1}$ is non-singular then
+    \begin{enumerate}
+        \item $\boldsymbol{\alpha}_{(h-1)}=\boldsymbol{\Gamma}_{h-1}^{-1}\boldsymbol{\gamma}_{h-1}$
+        \item $\boldsymbol{\beta}_{h-1}=\boldsymbol{\alpha}_{h-1}$
+    \end{enumerate} 
+\end{proposition}
+
+\begin{proof}
+    From the prediciton theorem we have that
+    \[
+        \expect{(X_{h+1}-\tilde{X}_{h+1})X_k}=0  
+    \]
+    Remembering the condition
+    \[
+        \tilde{X}_{h+1}=\alpha_{h-1,1}X_h+...+\alpha_{h-1,h-1}X_2=P_{\mean{sp\set{X_2,...,X_h}}}(X_{h+1})
+    \]
+    we have that
+    \begin{equation*}
+        \begin{split}
+            \expect{X_{h+1}X_k}&=\sum_{j=1}^{h-1}\alpha_{h-1,j}\expect{X_{h+1-j},X_k}\\
+            \gamma(h+1-k)&=\sum_{j=1}^{h-1}\alpha_{h-1,j}\gamma(h+1-k-j)\\
+        \end{split}
+    \end{equation*}
+    Set $i=h+1-k$, then for $k=2$ we have that $i=h-1$ and for $k=h$ we have that $i=1$. We can now rewrite the previous equation as
+    \[
+        \gamma(i)=\sum_{j=1}^{h-1}\alpha_{h-1,j}\gamma(i-j)
+    \]
+    for $i=1,...,h-1$. In matrix notation:
+    \[
+        \boldsymbol{\gamma}_{(h-1)}=\boldsymbol{\Gamma}_{h-1}\boldsymbol{\alpha}_{h-1}
+    \]
+    Then the fist statement follows by multiplying both sides of the equation by $\boldsymbol{\Gamma}_{h-1}^{-1}$. The second statemnet is proved in the same way and is thus left as an exercise.
+\end{proof}
+
+But how can we compute the auto correlation in $h$? From the definition: multivariate integral with joint distribution of $X_2,...,X_h$; but we can also use the $h$-th coefficient in a linear regression of $X_{h+1}$ on $X_h,...,X_2,X_1$.

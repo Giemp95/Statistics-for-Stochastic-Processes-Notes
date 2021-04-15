@@ -424,7 +424,7 @@ acf(arma.sim3, lag.max=50, main='ARMA (1, -0.25; -0.5)', ylim=c(-1,1))
 \end{example}
 
 \begin{theorem}
-    \label(theorem11)
+    \label{theorem11}
     Suppose $(X_t)\sim ARMA(p,q)$ with $\theta(Z)\ne0,\ \phi(Z)\ne0\ \forall Z\in\C$ such that $\abs{Z}=1$; then $\exists\tilde{\phi}(Z)$ and $\tilde{\theta}(Z)$ with
     \[
         degree(\tilde{\phi})=q\ \ \ degree(\tilde{\theta})=p  
@@ -473,3 +473,11 @@ acf(arma.sim3, lag.max=50, main='ARMA (1, -0.25; -0.5)', ylim=c(-1,1))
 \begin{remark}
     $\psi(Z)=\frac{\phi(Z)}{\theta(Z)}=\frac{\tilde{\phi}(Z)}{\tilde{\theta}(Z)}\tilde{\psi}(Z)$
 \end{remark}
+
+\begin{exercise}
+    Apply \ref{theorem11} to
+    \begin{enumerate}
+        \item $(X_t)\sim MA(1)$ with $\abs{\phi_1}>1$
+        \item $(X_t)\sim AR(1)$ with $\abs{\theta_1}>1$
+    \end{enumerate}
+\end{exercise}
