@@ -1,0 +1,435 @@
+\section{Lecture 14}
+\label{lecture14}
+
+\begin{center}
+    \textbf{The computation of the partial autocorrelation function. Mean square error. The special case of AR(p). Examples of partial autocorrelation functions in R. Forecasting: best linear predictors (BLP's). Recursive methods for the computation of the coefficients of the BLP: the Durbin-Levinson algorithm.}
+\end{center}
+
+\begin{theorem}
+    \label{theorem13}
+    If $(X_t)\sim AR(p)$ causal then
+    \begin{enumerate}
+        \item $\pi_{pp}=\theta_p$
+        \item $\pi_{hh}=0\ \ \ h>p$
+    \end{enumerate}
+\end{theorem}
+
+\begin{proof}
+    Compare
+    \[
+        \begin{pmatrix}
+            \rho(1)\\
+            \rho(2)\\
+            ...\\
+            \rho(p)\\
+        \end{pmatrix}
+        =
+        \begin{pmatrix}
+            1&\rho(1)&...&\rho(p-1)\\
+            \rho(1)&1&...&\rho(p-2)\\
+            ...&...&...&...\\
+            \rho(p-1)&\rho(p-2)&...&1\\
+        \end{pmatrix}  
+        \begin{pmatrix}
+            \alpha_{p,1}\\
+            \alpha_{p,2}\\
+            ...\\
+            \alpha_{p,p}\\
+        \end{pmatrix}
+    \]
+    versus
+    \[
+        \begin{pmatrix}
+            \rho(1)\\
+            \rho(2)\\
+            ...\\
+            \rho(p)\\
+        \end{pmatrix}
+        =
+        \begin{pmatrix}
+            1&\rho(1)&...&\rho(p-1)\\
+            \rho(1)&1&...&\rho(p-2)\\
+            ...&...&...&...\\
+            \rho(p-1)&\rho(p-2)&...&1\\
+        \end{pmatrix}  
+        \begin{pmatrix}
+            \theta_1\\
+            \theta_2\\
+            ...\\
+            \theta_p\\
+        \end{pmatrix}
+    \]
+    The first system of equations necessary to compute the PACF such that $\pi_{p,p}=\alpha_{p,p}$ while the second is the YW set of equations for $AR(p)$. The two sets of equations are equal, since $(\alpha_{p,1}),...\alpha_{p,p}=(\theta_1,...,\theta_p)$, so \textit{1.} follows. For the point \textit{2.}, as $p\ge1$ and $h>p$ then $h\ge2$. Consider $\theta(B)X_t=W_t$ for $t=h+1$; we have that
+    \begin{equation*}
+        \begin{split}
+            W_{h+1}&=X_{h+1}-\theta_1X_h+...-\theta_pX_{h+1-p}\\
+            &=X_{h-1}-\sum_{j=1}^p\theta_jX_{h+1-j}\\
+        \end{split}
+    \end{equation*}
+    We have to prove that $X_{h-1}-\sum_{j=1}^p\theta_jX_{h+1-j}\in\mean{sp}\set{X_2,...,X_h}^\perp$, that is equivalent to prove
+    \[
+        \expect{Y(X_{h+1}*\sum_{j=1}^p)\theta_jX_{h+1-j}}=0  
+    \]
+    with $Y\in\mean{sp}\set{X_2,...,X_h}$. As $(X_t)$ is causal we have that
+    \begin{equation*}
+        \begin{split}
+            X_2&\in\mean{sp}\set{W_2,W_1,...}\\
+            &...\\
+            X_h&\in\mean{sp}\set{W_h,W_{h-1},...}\\
+        \end{split}
+    \end{equation*}
+    implying that $Y\in\mean{sp}\set{W_j,j\le h}$ with $h\ge2$, which in turn imply that $\expect{YW_{h+1}}=0$, proving the èrevious equation. Moreover
+    \[
+        \sum_{J=1}^p\theta_jX_{h+1-j}=P_{\mean{sp}\set{X_2,...,X_h}}(X_{h+1})
+    \]
+    Consider
+    \[  
+        \pi_{hh}=corr\left(X_{h+1}-\sum_{j=1}^pX_{h+1-j},X_1-\tilde{X}_1\right)
+    \]
+    but we can observe that
+    \[
+        \pi_{hh}=corr\left(W_{h+1},f(X_1,X_2,...,X_h)\in\mean{sp}\set{W_j,j\le h}\right)=0
+    \]
+    concluding the proof.
+\end{proof}
+
+\begin{exercise}
+    Suppose
+    \begin{enumerate}
+        \item $(X_t)$ stationary, prove that $\pi_{22}=\frac{\rho(2)-\rho(1)^2}{1-\rho(1)^2}$
+        \item $(X_t)\sim MA(1)$, find $\pi_{22}$ in terms of $\phi_1$. 
+    \end{enumerate}
+\end{exercise}
+
+What about $\pi_{hh}$ for $MA(1)$? Suppose $(X_t)\sim MA(1)$ invertible; then we know that $W_t=\psi(B)X_t$ with $\psi(Z)=\sum_{j\ge0}\psi_jZ^j$ and $\sum_{j\ge0}\abs{\psi_j}<\infty$. As $\phi_0=0$ we have that $\psi_0=1$, and so we can write
+\[
+    W_t=X_t+\sum_{j\ge1}\psi_jX_{t-j}    
+\]
+which is a $AR(\infty)$ representation, implying that $\pi_{hh}\ne0$ for $h>q$. A similar statement can be proven for $ARMA(p,q)$. More details on this can be found in the table \ref{table_ACF_ARMA}. 
+\begin{center}
+    \begin{table}
+        \label{table_ACF_ARMA}
+        \begin{tabular}{c c c c}
+            \hline
+            $ $&$AR(p)$&$MA(1)$&$ARMA(p,q)$\\
+            \hline
+            ACF&Tails off&Cuts off after lag $q$&Tails off\\
+            PACF&Cuts off after lag $p$&Tails off&Tails off\\
+            \hline
+        \end{tabular}
+        \caption{Behaviour of the ACF  and PACF for causal and invertible $ARMA$ models}
+    \end{table}
+\end{center}
+
+How to estimate the PACF? One method consists in fitting and AR model starting from order 1 and continuing with 2,3,... using the least-squares method and picking out the last coefficient at each step, so that $\hat{\theta}_1=\hat{\alpha}_{11},\hat{\theta}_2=\hat{\alpha}_{22},\hat{\theta}_3=\hat{\alpha}_{33}$ and so on. Another method exploits the set linear equations
+\[
+    \boldsymbol{\rho}_{(h)}=\boldsymbol{R}_h\boldsymbol{\alpha}_{(h)}  
+\]
+by substituting the theoretical ACF with the approximated one. The standard error for the PACF is $\simeq\frac{1}{\sqrt{n}}$ for $h>p$.
+
+\begin{example}
+    Now we will study in R the PACF.
+    \begin{verbatim}
+#####################################################
+# The behavior of the PACF
+#####################################################
+
+library(astsa)
+library(polynom)
+#
+# AR(1)
+#
+set.seed(154)
+
+windows()
+ar1.sim1=arima.sim(list(ar=c(0.9)),200)
+acf2(ar1.sim1, main='AR(1) with th1=0.9')
+windows()
+ar1.sim2=arima.sim(list(ar=c(-0.9)),200)
+acf2(ar1.sim2, main='AR(1) with th1=-0.9')
+#
+# AR(2)
+#
+set.seed(154)
+
+windows()
+(roots=solve(polynomial(c(1,-0.5,-0.4))))
+ar2.sim1=arima.sim(list(ar=c(0.5,0.4)),200)
+acf2(ar2.sim1,main='AR(2) with th1=0.5, th2=0.4')
+#
+windows()
+(roots=solve(polynomial(c(1,0.5,-0.4))))
+ar2.sim2=arima.sim(list(ar=c(-0.5,0.4)),200)
+acf2(ar2.sim2,main='AR(2) with th1=-0.5, th2=0.4')
+
+#
+# MA(1)
+#
+set.seed(154)
+windows()
+ma1.sim1=arima.sim(list(ma=c(0.9)),200)
+acf2(ma1.sim1,main='MA(1) with phi1=0.9')
+#
+windows()
+ma1.sim2=arima.sim(list(ma=c(-0.9)),200)
+acf2(ma1.sim2,main='MA(1) with phi1=-0.9')
+
+#
+# MA(2)
+#
+set.seed(154)
+windows()ma2.sim1=arima.sim(list(ma=c(2.1,0.9)),200)
+acf2(ma2.sim1,main='MA(2) with ph1=2.1, ph2=0.9')
+windows()
+ma2.sim2=arima.sim(list(ma=c(-2.1,0.9)),200)
+acf2(ma2.sim2,main='MA(2) with ph1=-2.1, ph2=0.9')
+
+#
+# ARMA(1,1)
+#
+set.seed(154)
+windows()
+arma.sim1=arima.sim(list(ma=c(0.9),ar=c(0.6)),200)
+acf2(arma.sim1,main='ARMA(1,1) with ph1=0.9, ph2=0.6')
+#
+windows()
+arma.sim2=arima.sim(list(ma=c(-0.9),ar=c(-0.6)),200)
+acf2(arma.sim2,main='ARMA(1,1) with ph1=-0.9, ph2=-0.6')
+
+# the dataset jj
+#
+data(jj)
+
+# decomposition in an additive model
+#
+comp=stl(jj,'per')
+# To see the decomposition
+#
+windows()
+plot(comp)
+# The procedure gives in output a matrix comp$time.series: the residuals are
+# in the third column
+head(comp$time.series,6)
+# ACF and PACF of residuals
+windows()
+acf2(comp$time.series[,3],max.lag=40,main='Residuals JJ')
+    \end{verbatim}
+\end{example}
+
+Now we will introduce forecasting: in this case the goal is to predict the future value of a time series($x_{n+k}$) based on the observed value up to the present ($x_1,...,x_n$). $k$ is said \textbf{lead time}. Forecasting is a case of \textbf{extrapolation}.
+
+How much an event is predictable depends on several factors, like
+\begin{itemize}
+    \item the understanding of the factors;
+    \item the available data;
+    \item the influence of the forecast on the event;
+\end{itemize}
+
+\begin{example}
+    Electricity demand well suits forecast, since we know very well what are the factors that influence it (temperature, season, economic conditions...), we have much historical data and the forecasting does not influence the future electricity demand.
+    
+    On the other hand, the currency exchange rate satisfies only one of these conditions: the historical data. We do not fully understand all the factors that lead to a change in these rates, and the forecast itself has a direct impact on them, meaning that the forecast influence itself.
+\end{example}
+
+There are two different types of forecasting methods:
+\begin{itemize}
+    \item \textbf{qualitative}: which is based on subjective assumption and, in many cases, it is the only available option;
+    \item \textbf{quantitative}: it is based on numerical information about the past and on the assumption that the past patterns will continue in the future.
+\end{itemize}
+The choice of the method depends on various factors, like the aim of the forecast, the property of the time series, the available data and the long/short term aim of the forecast. It is not unusual to use multiple methods and then compare the results. 
+
+When choosing a model, it is usually necessary to partition the dataset into two subsets: the \textbf{training set} (typically 80\% of the original dataset)is used to estimate the parameters of the forecasting model, and the \textbf{test set} (typically 20\% of the original dataset) to evaluate its accuracy. Of course, the training set contains the data from the beginning up to a specific time, and the test set the remaining data. It is not obvious that a model that fits well the training set will have good accuracy on the test set; how can we choose the best model to forecast? There is no exact answer to this question; typically, a good model has a good forecasting accuracy and a Gaussian residual. Remember the \textbf{principle of parsimony}: choose the simplest model (fewest parameters) that fits the evidence. In the following, we will assume that $(X_t)$ is stationary and that the model's parameters are known.
+
+We have seen that the minimum mean square error predictor of $\tilde{X}_{n+k}$ is the conditional expectation:
+\[
+    \tilde{X}_{n+k}=\expect{X_{n+k}|X_1,X_2,...,X_n}  
+\]
+since
+\[
+    \expect{X_{n+k}-\tilde{X}_{n+k}}^2=\inf_{Y\in\el{2}(\Omega,\mathcal{F},\mathbb{P})}\expect{X_{n+k}-Y}^2
+\]
+where $\mathcal{F}=\sigma(X_1,X_2,...,X_n)$. Remember that $\tilde{X}_{n+k}$ is the BLP of $X_1,...,X_n$, that is
+\[
+    \tilde{X}_{n+k}=\alpha_{n,1}^{(k)}X_n+...+\alpha_{n,n}^{(k)}X_1=\sum_{j=1}^n\alpha_{n,j}^{(k)}X_{n+1-j}
+\]
+where $\tilde{X}_{n+k}=P_{\mean{sp}\set{X_1,...,X_n}}(X_{n+k})$ is the \textbf{k-step predictor}. How to compute $\set{\alpha_{n,j}^{(k)}}$? Using the prediction equations:
+\[
+    \expect{\left(X_{n+k}-\sum_{j=1}^n\alpha_{n,j}^{(k)}X_{n+1-j}\right)X_{n+1-i}}=0  
+\]
+for $i=1,...,n$. From some computation we find that
+\[
+    \expect{X_{n+k}X_{n+1-i}}=\sum_{j=1}^n\alpha_{n,j}^{(k)}\expect{X_{n+1-j}X_{n+1-i}}  
+\]
+which can be written in matrix notation as
+\[
+    \boldsymbol{\gamma}_{(n)}^{(k)}=\boldsymbol{\Gamma}_n\boldsymbol{\alpha}_{(n)}^{(k)}  
+\]
+which (explicitly) is
+\[
+    \begin{pmatrix}
+        \gamma(k)\\
+        \gamma(k+1)\\
+        ...\\
+        \gamma(k+n-1)\\
+    \end{pmatrix}
+    =
+    \left[\gamma(i-j)\right]_{i,j=1}^n
+    \begin{pmatrix}
+        \alpha_{n,1}^{(k)}\\
+        ...\\
+        \alpha_{n,n}^{(k)}\\
+    \end{pmatrix}
+\]
+For $k=1$, we have the 1-step predictor
+\[
+    \boldsymbol{\gamma}_{(n)}^{(1)}=\boldsymbol{\Gamma}_n\boldsymbol{\alpha}_{(n)}^{(1)}
+\]
+which is the usual system of equations that we have seen in the PACF. In particular, we can use the correlation matric by normalizing by the correlation of the time series and recover that
+\[
+    \boldsymbol{\rho}_{(n)}=\boldsymbol{R}_n\boldsymbol{\alpha}_{(n)}  
+\]
+that are
+\[
+    \begin{pmatrix}
+        \rho(1)\\
+        \rho(2)\\
+        ...\\
+        \rho(n)\\
+    \end{pmatrix}
+    =
+    \left[\rho(i-j)\right]_{i,j=1}^n
+    \begin{pmatrix}
+        \alpha_{n,1}\\
+        ...\\
+        \alpha_{n,n}\\
+    \end{pmatrix}
+\]
+As a special case, the 1-step predictor of a causal $AR(p)$ is
+\[
+    \tilde{X}_{n+1}=\theta_1X_n+...+\theta_pX_{n+1-p}\ \ \ n>p
+\]
+since with the PACF we have seen that
+\[
+    \alpha_{n,j}=\begin{cases}
+        \theta_j&j=1,...,p\\
+        0&j=p+1,...,n\\
+    \end{cases}
+\]
+What about the error of replacing $X_{n+k}$ with its BLP $\tilde{X}_{n+k}$? As always we can use the mean squared error:
+\begin{equation*}
+    \begin{split}
+        MSE(\tilde{X}_{n+k})&=\expect{(X_{n+k}-\tilde{X}_{n+k})^2}\\
+        &=\expect{(X_{n+k}-\tilde{X}_{n+k})(X_{n+k}-\tilde{X}_{n+k})}\\
+        &=\expect{X_{n+k}(X_{n+k}-\tilde{X}_{n+k})}-\expect{\tilde{X}_{n+k}(X_{n+k}-\tilde{X}_{n+k})}\\
+    \end{split}
+\end{equation*}
+note that $\tilde{X}_{n+k}\in\mean{sp}\set{X_1,...,X_n}$ and $(X_{n+k}-\tilde{X}_{n+k})\in\mean{sp}\set{X_1,...,X_n}$, so the second expectation is equal to zero. Continuing with the computation
+\begin{equation*}
+    \begin{split}
+        MSE(\tilde{X}_{n+k})&=\expect{X_{n+k}(X_{n+k}-\tilde{X}_{n+k})}-\expect{\tilde{X}_{n+k}(X_{n+k}-\tilde{X}_{n+k})}\\
+        &=\expect{X_{n+k}(X_{n+k}-\tilde{X}_{n+k})}\\
+        &=\expect{X_{n+k}^2}-\expect{\sum_{j=1}^n\alpha_{n,j}^{(k)}X_{n+k}X_{n+1-j}}\\
+        &=\expect{X_{n+k}^2}-\sum_{j=1}^n\alpha_{n,j}^{(k)}\expect{X_{n+k}X_{n+1-j}}\\
+        &=\gamma(0)-\sum_{j=1}^n\alpha_{n,j}^{(k)}\gamma(k-1+j)\\
+        &=\gamma(0)-\left(\boldsymbol{\gamma}_{(n)}^{(k)}\right)^\intercal\boldsymbol{\alpha}_{(n)}^{(k)}\\
+    \end{split}
+\end{equation*}
+
+Now let us get back to the resolution of the previous system of equations
+\[
+    \boldsymbol{\gamma}_{(n)}^{(k)}=\boldsymbol{\Gamma}_n\boldsymbol{\alpha}_{(n)}^{(k)}
+\]
+If  $\boldsymbol{\Gamma}_n$ is non-singular, then $\exists!\boldsymbol{\alpha}_{(n)}^{(k)}$ such that $\boldsymbol{\alpha}_{(n)}^{(k)}=\boldsymbol{\Gamma}_n^{-1}\boldsymbol{\gamma}_{(n)}^{(k)}$. Otherwise, if $\boldsymbol{\Gamma}_n$ is singular then there may be many solutions, but all of them will lead to the same predictor due to the projection theorem.
+
+\begin{exercise}
+    Suppose $(X_t)=A\cos(\omega t)+B\sin(\omega t),\ \omega\in(0,\pi))$ where $A,\ B$ are uncorrelated random variables such that $\expect{A}=\expect{B}=0$ and $\expect{A^2}=\expect{B^2}=\sigma^2$.
+    \begin{itemize}
+        \item Prove that $\alpha_{1,1}=\cos(\omega),\ \boldsymbol{\alpha}_{(2)}=(2\cos(\omega),-1)^\intercal$ with $k=1$.
+        \item Prove that $X_3=2\cos(\omega)X_2-X_1$ and compute $MSE(\tilde{X}_3)$.
+        \item Find two expression of $\tilde{X}_4$ in terms of $X_1,X_2,X_3$.
+        \item Check if $\boldsymbol{\Gamma}_3$ is singular. 
+    \end{itemize}
+\end{exercise}
+
+We can compute the 1-step predictor $\tilde{X}_{h+1}$ iteratively by starting from $h=1$ up to the fixed $n$ without requiring any matrix inversion. We will see the \textbf{Durbin-Levinson} algorithm:
+\begin{itemize}
+    \item 
+    \[
+        h=1\ \ \ v_0^2=\gamma(0)\ \ \ \alpha_{1,1}=\frac{\gamma(1)}{\gamma(0)}=\rho(1)\Leftarrow
+        \begin{cases}
+            v_0^2=MSE(\tilde{X}_2)\\
+            \tilde{X}_2=\alpha_{1,1}X_1&\alpha_{1,1}=\pi_{11}\\
+        \end{cases} 
+    \]
+    \item 
+    \[
+        h=2\ \ \ v_1^2=(1-\alpha_{1,1}^2)v_0^2\ \ \ \alpha_{2,2}=\frac{\gamma(2)-\alpha_{1,1}\gamma(1)}{v_1^2}\Leftarrow
+        \begin{cases}
+            v_1^2=MSE(\tilde{X}_3)\\
+            \tilde{X}_3=\alpha_{2,1}X_2+\alpha_{2,2}X_1&\alpha_{2,2}=\pi_{22}\\
+        \end{cases} 
+    \]
+    \item 
+    \[
+        h=3\ \ \ v_2^2=(1-\alpha_{2,2}^2)v_1^2\ \ \ \alpha_{3,3}=\frac{\gamma(3)-\sum_{j=1}^2\alpha_{2,j}\gamma(3-j)}{v_2^2}=\Leftarrow
+        \begin{cases}
+            v_2^2=MSE(\tilde{X}_4)\\
+            \tilde{X}_4=\alpha_{3,1}X_3+\alpha_{3,2}X_2+\alpha_{3,3}X_1&\alpha_{3,3}=\pi_{33}
+        \end{cases} 
+    \]
+    \item ...
+\end{itemize}
+up to $h=n$. This method as the advantages that we know the values of $\set{\pi_{h,h}}$ and we have the BLP $\set{\tilde{X}_{h+1}}$ for $h=1,...,n$.
+
+\begin{proof}
+    The main idea of this algorithm is that
+    \[
+        \mean{sp}\set{X_1,...,X_h}=\mean{sp}\set{X_2,...,x_h}\oplus\mean{sp}\set{X_1-\tilde{X}_1}
+    \]
+    where $\tilde{X}_1=P_{\mean{sp}\set{X_2,...,X_h}}(X_1)$, beacuse
+    \[
+        \mean{sp}\set{X_2,...,X_h}\perp\mean{sp}\set{X_1-\tilde{X}_1}  
+    \]
+    implying that
+    \begin{equation*}
+        \begin{split}
+            \tilde{X}_{h+1}&=P_{\mean{sp}\set{X_1,...,X_h}}(X_{h+1})\\
+            &=P_{\mean{sp}\set{X_2,...,X_h}}(X_{h+1})+a(X_1-P_{\mean{sp}\set{X_2,...,X_h}}(X_1))\\
+        \end{split}
+    \end{equation*}
+    where $P_{\mean{sp}\set{X_2,...,X_h}}(X_{h+1})$ and $P_{\mean{sp}\set{X_2,...,X_h}}(X_1)$ are the BLP in $\pi_{hh}$.
+\end{proof}
+
+How to compute $\tilde{X}_{n+k}$ iteratively?
+\begin{enumerate}
+    \item If $X\in\mean{sp}\set{X_1,...,X_n}$ then $P_{\mean{sp}\set{X_1,...,X_n}}(X)=X$
+    \item If $M_1,M_\subseteq\el{2}$ such that $M_1\subseteq M_2$ then $P_{M_1}(X)=P_{M_1}(P_{M_2}(X))$
+\end{enumerate}
+
+Suppose $k=2$ and to want to compute $\tilde{X}_{n+2}=P_{\mean{sp}\set{X_1,...,X_n}}(X_{n+2})$. As $\mean{sp}\set{X_1,...,X_n}\subseteq\mean{sp}\set{X_1,...,X_n,X_{n+1}}$ we have that
+\begin{equation*}
+    \begin{split}
+        \tilde{X}_{n+2}&=P_{\mean{sp}\set{X_1,...,X_n}}(X_{n+2})\\
+        &=P_{\mean{sp}\set{X_1,...,X_n}}(P_{\mean{sp}\set{X_1,...,X_{n+1}}}(X_{n+2}))\ \ \ for\ condition\ 2.\\
+        &=P_{\mean{sp}\set{X_1,...,X_n}}(\alpha_{n+1,1}X_{n+1}+\alpha_{n+1,2}X_n+...+\alpha_{n+1,n+1}X_1)\ \ \ for\ linearity\\
+        &=\alpha_{n+1,1}P_{\mean{sp}\set{X_1,...,X_n}}(X_{n+1})+\alpha_{n+1,2}P_{\mean{sp}\set{X_1,...,X_n}}(X_n)+...+\alpha_{n+1,n+1}P_{\mean{sp}\set{X_1,...,X_n}}(X_1)\\
+        &=\alpha_{n+1,1}\tilde{X}_{n+1}+\alpha_{n+1,2}X_n+...+\alpha_{n+1,n+1}X_1\\
+    \end{split}
+\end{equation*}
+
+So the final structure of the algorithm is
+\begin{algorithm}
+    \begin{algorithmic}[1]
+        \State compute $\hat{\gamma}(0),...,\hat{\gamma}(n)$
+        \For{$h\in1,...,n$}
+            \State compute $\hat{v}_{h-1}^2$
+            \State compute $\hat{\alpha_{h,1}};...;\hat{\alpha_{h,h}}$
+            \State compute $\tilde{x}_{h+1}$
+        \EndFor
+        \If{$k\ge2$}
+            \For{$h=n,...,n+k-2$}
+                \State repeat 1. and 2. adding to the sample $\tilde{x}_{h+1}$ to obtain $\tilde{x}_{h+2}$
+            \EndFor
+        \EndIf
+    \end{algorithmic}
+\end{algorithm}
