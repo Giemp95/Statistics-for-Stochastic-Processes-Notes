@@ -1,0 +1,408 @@
+\section{Lecture 15}
+\label{lecture15}
+
+\begin{center}
+    \textbf{The innovations algorithm. Properties of innovations. Recursions for the mean square errors.  Applications to MA(q) and ARMA(p,q) models: the fitted innovations MA(q) and ARMA(p,q) models. Maximum likelihood estimators for Gaussian time series. ARIMA models.}
+\end{center}
+
+There is a second method allowing us to compute the BLP, the \textbf{innovations algorithm}. This method can be applied to any series with finite second moment (stationary or not).
+
+\begin{proposition}
+    Suppose:
+    \begin{itemize}
+        \item $(X_t)\in\el{2}$
+        \item $\expect{X_t}=0\ \ \ \forall t\in\Z$
+        \item $\tilde{X}_h=
+        \begin{cases}
+            0&h=1\\
+            P_{\mean{sp}\set{X_1,...,X_{h-1}}}(X_h)=\sum_{j=1}^{h-1}\alpha_{h-1,j}X_{h-j}&h=2,3,...\\
+        \end{cases}$
+        \item $U_h=X_h-\tilde{X}_h\ \ \ h=1,2,...$
+    \end{itemize}
+    then
+    \[
+        \tilde{X}_{h+1}=
+        \begin{cases}
+            0&h=0\\
+            \sum_{j=1}^hb_{h,j}U_{h+1-j}&h=1,2,...\\
+        \end{cases}  
+    \]
+    where
+    \[
+        b_{h,j}=\left(\boldsymbol{A}_h^{-1}-\boldsymbol{I}_h\right)_{h,j}  
+    \]
+    and
+    \[
+        \left(\boldsymbol{A}_h\right)_{ij}=
+        \begin{cases}
+            0&i<j\\
+            1&i=j\\
+            -\alpha_{i-1,i-j}&i>j\\
+        \end{cases}  
+    \]
+\end{proposition}
+
+\begin{remark}
+    The sequence $U_h$ is the sequence of innovations, that is the 1-step predicion errors sequence.
+\end{remark}
+
+\begin{proof}
+    Consider
+    \begin{equation*}
+        \begin{split}
+            U_1&=X_1-\tilde{X}_1=X_1\\
+            U_2&=X_2-\tilde{X}_2=X_2-\alpha_{1,1}X_1\\
+            U_3&=X_3-\tilde{X}_3=X_3-\alpha_{2,1}X_2-\alpha_{2,2}X_1\\
+            &...\\
+        \end{split}
+    \end{equation*}
+    that is
+    \[
+        \begin{pmatrix}
+            U_1\\
+            U_2\\
+            U_3\\
+            ...\\
+            U_h\\
+        \end{pmatrix}  
+        =
+        \begin{pmatrix}
+            1&0&...&0\\
+            -\alpha_{1,1}&1&...&0\\
+            -\alpha_{2,1}&-\alpha_{2,2}&...&0\\
+            ...&...&...&...&\\
+            -\alpha_{h-1,h-1}&\alpha_{h-1,h-2}&...&1\\
+        \end{pmatrix}
+        \begin{pmatrix}
+            X_1\\
+            X_2\\
+            X_3\\
+            ...\\
+            X_h\\
+        \end{pmatrix}
+    \]
+    in matrix notation
+    \[
+        \boldsymbol{U}_{(h)}=\boldsymbol{A}_h\boldsymbol{X}_{(h)}  
+    \]
+    The determinant of $\boldsymbol{A}_h=1$ because it is a lower triangular matrix, so its inverse exists; then $\boldsymbol{X}_{(h)}=\boldsymbol{A}_h^{-1}\boldsymbol{U}_{(h)}$. Now consider
+    \[
+        \boldsymbol{U}_{(h)}=\boldsymbol{X}_{(h)}-\tilde{\boldsymbol{X}}_{(h)}
+    \]
+    this implies that
+    \begin{equation*}
+        \begin{split}
+            \tilde{\boldsymbol{X}}_{(h)}&=\boldsymbol{X}_{(h)}-\boldsymbol{U}_{(h)}\\
+            &=\boldsymbol{A}_h^{-1}\boldsymbol{U}_{(h)}-\boldsymbol{U}_{(h)}\\
+            &=\left(\boldsymbol{A}_h^{-1}-\boldsymbol{I}_h\right)\boldsymbol{U}_{(h)}\\
+            &=\boldsymbol{B}_h\boldsymbol{U}_{(h)}\\
+        \end{split}
+    \end{equation*}
+    then
+    \[
+        \boldsymbol{B}_h=
+        \begin{pmatrix}
+            0&0&0&...&0\\
+            b_{1,1}&0&0&...&0\\
+            b_{2,1}&b_{2,2}&0&...&0\\
+            ...&...&...&...&...\\
+            b_{h-1,h-1}&b_{h-1,h-2}&b_{h-1,h-3}&...&0\\
+        \end{pmatrix}
+    \]
+    Expanding the previous product gives the final result and completes the proof.
+\end{proof}
+
+\begin{example}
+    $\tilde{X}_1=0,\ \tilde{X}_2=b_{1,1}(X_1-\tilde{X}_1)=b_{1,1}X_1,\ \tilde{X}_3=b_{2,2}(X_1-\tilde{X}_1)+b_{2,1}(X_2-\tilde{X}_2),...$
+\end{example}
+
+The innovations have interesting properties:
+\begin{enumerate}
+    \item $sp\set{U_1,...,U_h}=sp\set{X_1...,X_h}$ since in $U_j$, with $J=1,...,h$, these is the contribution of $X_j$ and $\tilde{X}_j$, which in turn contains the contributions of $X_1,...,X_{j-1}$.
+    \item $(U_h)$ are uncorrelated random variables, that is $\expect{U_iU_j}=0$ for $i\ne j$. It can be prove in many ways; this is one:
+        \begin{proof}
+            Consider
+            \begin{equation*}
+                \begin{split}
+                    \expect{U_iU_j}&=\expect{(X_i-\tilde{X}_i)(X_j-\tilde{X}_j)}\ \ \ fix\ j\ge2,\ i<j\\
+                    &=\expect{X_i(X_j-\tilde{X}_j)}-\expect{\tilde{X}_i(X_j-\tilde{X}_j)}
+                \end{split}
+            \end{equation*}
+            Note that $\expect{X_i(X_j-\tilde{X}_j)}=0$, since
+            \[
+                X_i\in\mean{sp}\set{X_1,...,X_{j-1}}\ \ \ and\ \ \ X_j-\tilde{X}_j\in\mean{sp}\set{X_1,...,X_{j-1}}^\perp 
+            \]
+            als also $\expect{\tilde{X}_i(X_j-\tilde{X}_j)}=0$, since
+            \[
+                \tilde{X}_i\in\mean{sp}\set{X_1,...,X_{i-1}}\subseteq\mean{sp}\set{X_1,...,X_{j-1}}\ \ \ and\ \ \ X_j-\tilde{X}_j\in\mean{sp}\set{X_1,...,X_{j-1}}^\perp 
+            \]
+        \end{proof}  
+\end{enumerate}
+
+Now we will see how to recursively compute $\set{b_{h,j}}$:
+\begin{equation*}
+    \begin{split}
+        \tilde{X}_{h+1}&=\sum_{j=1}^{h}b_{h,j}(X_{h+1-j}-\tilde{X}_{h+1-j})\\
+        \expect{\tilde{X}_{h+1}(X_k-\tilde{X}_k)}&=\sum_{j=1}^hb_{h,j}\expect{(X_{h+1-j}-\tilde{X}_{h+1-j})(X_k-\tilde{X}_k)}\\
+    \end{split}
+\end{equation*}
+Note that
+\[
+    \expect{(X_{h+1-j}-\tilde{X}_{h+1-j})(X_k-\tilde{X}_k)}=\expect{U_{h+1-j}U_k}\ne0\iff h+1-j=k\iff j=h+1-k  
+\]
+then
+\[
+    \expect{\tilde{X}_{h+1}(X_k-\tilde{X}_k)}=b_{h,h+1-k}\expect{X_k-\tilde{X}_k}^2
+\]
+observe that $\tilde{X}_{h+1}=X_{h+1}+(\tilde{X}_{h+1}-X_{h+1})$ and $\expect{X_k-\tilde{X}_k}^2=MSE(\tilde{X}_k)=v_k^2$. Then
+\[
+    \expect{X_{h+1}(X_k-\tilde{X}_k)}+\expect{(\tilde{X}_{h+1}-X_{h+1})(X_k-\tilde{X}_k)}=\expect{X_{h+1}(X_k-\tilde{X}_k)}=b_{h,h+1-k}v_k^2  
+\]
+For $k=1$ we have that $\expect{X_{h+1}X_1}=b_{h,h}v_1^2$, implying $b_{h,h}=\frac{cov(X_{h+1},X_1)}{v_1^2}$. For $k=2,...,h$ we can rewrite the last equation substituting $\tilde{X}_k$ with $\sum_{j=1}^{k-1}b_{k-1,j}(X_{k-j}-\tilde{X}_{k-j})$:
+\begin{equation*}
+    \begin{split}
+        b_{h,h+1-k}v_k^2&=\expect{X_{h+1}X_k}-\sum_{j=1}^{k-1}b_{k-1,j}\expect{X_{h+1}(X_{k-j}\tilde{X}_{k-j})}\ \ \ k-j\in\set{1,...,k-1}\\
+        &=cov(X_{h+1}X_k)-\sum_{j=1}^{k-1}b_{k-1,j}b_{h,h+1-(k-j)}v_{k-j}^2\ \ \ set\ k-j=1\\
+        &=cov(X_{h+1}X_k)-\sum_{i=1}^{k-1}b_{k-1,k-i}b_{h,h+1-i}v_i^2\\
+    \end{split}
+\end{equation*}
+Then we have that 
+\[
+    b_{h,h+1-k}=\frac{cov(X_{h+1},X_k)-\sum_{i=1}^{k-1}b_{k-1,k-i}b_{h,h+1-i}v_i^2}{v_k^2}
+\]
+for $k=2,3,...,h$.
+
+\begin{example}
+    Suppose $(X_t)$ stationary, then:
+    \begin{itemize}
+        \item $\textbf{h=1}$: compute $v_1^2$
+            \begin{itemize}
+                \item $k=1\rightarrow b_{1,1}=\frac{\gamma_X(1)}{v_1^2}$
+            \end{itemize}
+        \item $\textbf{h=2}$: compute $v_2^2$
+            \begin{itemize}
+                \item $k=1\rightarrow b_{2,2}=\frac{\gamma_X(2)}{v_2^2}$
+                \item $k=2\rightarrow b_{2,1}=\frac{\gamma_X(1)-b_{1,1}b_{2,2}v_1^2}{v_2^2}$
+            \end{itemize}
+        \item $\textbf{h=3}$: compute $v_3^2$
+            \begin{itemize}
+                \item $k=1\rightarrow b_{3,3}=\frac{\gamma_X(3)}{v_3^2}$
+                \item $k=2\rightarrow b_{3,2}=\frac{\gamma_X(2)-b_{1,1}b_{3,3}v_1^2}{v_3^2}$
+                \item $k=3\rightarrow b_{3,1}=\frac{\gamma_X(1)-b_{2,2}b_{3,3}v_1^2-b_{2,1}b_{3,2}v_2^2}{v_3^2}$
+            \end{itemize}
+        \item $\textbf{h=4}$: compute $v_4^2$
+            \begin{itemize}
+                \item $k=1\rightarrow b_{4,4}=\frac{\gamma_X(4)}{v_4^2}$
+                \item $k=2\rightarrow b_{4,3}=\frac{\gamma_X(3)-b_{1,1}b_{4,4}v_1^2}{v_4^2}$
+                \item $k=3\rightarrow b_{4,2}=\frac{\gamma_X(2)-b_{2,2}b_{4,4}v_1^2-b_{2,1}b_{4,3}v_2^2}{v_4^2}$
+                \item $k=4\rightarrow b_{4,1}=\frac{\gamma_X(1)-b_{3,3}b_{4,4}v_1^2-b_{3,2}b_{4,3}v_2^2-b_{3,1}b_{4,2}v_3^2}{v_4^2}$
+            \end{itemize}
+    \end{itemize}
+    Note that this computation simplify for $(X_t)\sim MA(q)$: $\gamma_X(h)=0$ for $h>q$.
+\end{example}
+
+Now we will see the computation of $\set{v_h^2}$: consider
+\[
+    v_h^2=\expect{(X_h-\tilde{X}_h)^2}=\expect{X_h^2}+\expect{\tilde{X}_h^2}-2\expect{X_h\tilde{X_h}}    
+\]
+note that $\expect{(X_h-\tilde{X}_h)\tilde{X}_h}=0$ since $(X_h-\tilde{X}_h)\in\mean{sp}\set{X_1,...,X_{h-1}}^\perp$ and $\tilde{X}_h\in\mean{sp}\set{X_1,...,X_{h-1}}$; so $\expect{X_h\tilde{X}_h}=\expect{\tilde{X}_h^2}$. We than have
+\[
+    v_h^2=\expect{X_h^2}-\expect{\tilde{X}_h^2}
+\]
+for $h=1,2,...$. In particular, for $h=1$ we have $v_1^2=\expect{X_1^2}-\expect{\tilde{X}_1^2}=\expect{X_1^2}=Var(X_1)$. For $h=2,3,...$
+\begin{equation*}
+    \begin{split}
+        v_h^2&=Var(X_h)-\expect{\left(\sum_{j=1}^{h-1}b_{h-1,j}(X_{h-j}-\tilde{X}_{h-j})\right)^2}\\
+        &=Var(X_h)-\sum_{j=1}^{h-1}b_{h-1,j}^2\expect{\left(X_{h-j}-\tilde{X}_{h-j}\right)^2}\\
+        &=Var(X_h)-\sum_{j=1}^{h-1}b_{h-1,j}^2MSE(\tilde{X}_{h-j})\\
+        &=Var(X_h)-\sum_{j=1}^{h-1}b_{h-1,j}^2v_{h-j}^2\\
+    \end{split}
+\end{equation*}
+That means that in the previous example we can replace $compute\ v_1^2$ with $\gamma_X(0)$, $compute\ v_2^2$ with $\gamma_X(0)-b_{1,1}^2v_1^2$, $compute\ v_3^2$ with $\gamma_X(0)-b_{2,1}^2v_2^2-b_{2,2}^2v_1^2$ and so on. 
+
+\begin{exercise}
+    Find the 1-step predictor of $MA(1)$.
+\end{exercise}
+
+It is also possible to apply the innovations algorithm to $ARMA$ model, and it simplifies drastically. The idea is to apply it tp a suitable transformation of $(X_t)$.
+
+\begin{proposition}
+    If $(X_t)\sim ARMA(p,q)$ and    
+    \[
+        Y_t=
+        \begin{cases}
+            \frac{X_t}{\sigma}&t=1,2,...,m\\
+            \theta(B)\frac{X_t}{\sigma}&t>m\\
+        \end{cases}  
+    \]
+    with $\sigma^2=\expect{W_t^2}$ the variance of the white noise and $m=\max\set{p,q}$ with $p,q\ge1$ then
+    \begin{enumerate}
+        \item $\mean{sp}\set{Y_1,...,Y_h}=\mean{sp}\set{X_1,...,X_h}\ \ \ \forall h\ge1$
+        \item $Y_h-\tilde{Y}_h=\frac{1}{\sigma}(X_h-\tilde{X}_h)\ \ \ \forall h\ge1$
+    \end{enumerate}
+\end{proposition}
+
+\begin{proof}
+    The first point i straightforward to prove, since $Y_t$ is a linear combination of $X_t$. We will now prove the second point. For $h\le m$ we have that
+    \[
+      \tilde{Y}_h=P_{\mean{sp}\set{Y_1,...,Y_{h-1}}}(Y_h)=P_{\mean{sp}\set{X_1,...,X_{h-1}}}\left(\frac{X_h}{\sigma}\right)=\tilde{X}_{\frac{h}{\sigma}}  
+    \]
+    For $h>m$ instead
+    \begin{equation*}
+        \begin{split}
+            \tilde{Y}_h&=P_{\mean{sp}\set{Y_1,...,Y_{h-1}}}(Y_h)\\
+            &=\sigma^{-1}P_{\mean{sp}\set{X_1,...,X_{h-1}}}(X_h-\theta_1X_{h-1}+...-\theta_pX_{h-p})\\
+            &=\sigma^{-1}\left[P_{\mean{sp}\set{X_1,...,X_{h-1}}}(X_h)-\theta_1P_{\mean{sp}\set{X_1,...,X_{h-1}}}(X_{h-1})+...-\theta_pP_{\mean{sp}\set{X_1,...,X_{h-1}}}(X_{h-p})\right]\\
+            &=\sigma^{-1}\left[\tilde{X}_h-\theta_1X_{h-1}+...-\theta_pX_{h-p}\right]\\
+        \end{split}
+    \end{equation*}
+    therefore
+    \[
+        Y_h-\tilde{Y}_h=\frac{\theta(B)X_h}{\sigma}-\frac{\tilde{X}_h-\theta_1X_{h-1}+...-\theta_pX_{h-p}}{\sigma}=\frac{X_h-\tilde{X}_h}{\sigma}
+    \]  
+    completing the proof.
+\end{proof}
+
+\begin{proposition}
+    If $(X_t)\sim ARMA(p,q)$ and    
+    \[
+        Y_t=
+        \begin{cases}
+            \frac{X_t}{\sigma}&t=1,2,...,m\\
+            \theta(B)\frac{X_t}{\sigma}&t>m\\
+        \end{cases}  
+    \]
+    with $\sigma^2=\expect{W_t^2}$ the variance of the white noise and $m=\max\set{p,q}$ with $p,q\ge1$ then
+    \begin{enumerate}
+        \item $\tilde{Y}_{h+1}=
+            \begin{cases}
+                \sum_{j=1}^hb_{h,j}(Y_{h+1-j}-\tilde{Y}_{h+1-j})&1\le h<m\\
+                \sum_{j=1}^qb_{h,j}(Y_{h+1-j}-\tilde{Y}_{h+1-j})&h\ge m\\
+            \end{cases}$
+        \item $\tilde{X}_{h+1}=
+            \begin{cases}
+                \sum_{j=1}^hb_{h,j}(X_{h+1-j}-\tilde{X}_{h+1-j})&h<m\\
+                \theta_1X_h+...+\theta_pX_{h+1-p}+\sum_{j=1}^qb_{h,j}(X_{h+1-j}-\tilde{X}_{h+1-j})&h\ge m\\
+            \end{cases}$
+    \end{enumerate}
+\end{proposition}
+
+\begin{proof}
+    For the first point there is little to say, since for $h<m$ the formula is just the application of the innovations algorithm to $Y_t$, while for $h>m$ we know that $(Y_t)\sim MA(q)$ and there there is a cutoff in the coefficient of the innovations algorithm, and for $h=m$ the BLP $\tilde{Y}_{m+1}\rightarrow Y_{m+1}$, which is a $MA(q)$ and then as the same cutoff. 
+    
+    About the second point we have that the first equation follows from the first point, since for $h<m$ we know that $h+1\le m$, and so $\tilde{Y}_{h+1}=\frac{\tilde{X}_{h+1}}{\sigma}$. For the second equation note that
+    \begin{equation*}
+        \begin{split}
+            \tilde{Y}_{h+1}&=\sum_{j=1}^qb_{h,j}(Y_{h+1-j}-\tilde{Y}_{h+1-j})\\
+            \sigma^{-1}(\tilde{X}_{h+1}-\theta_1X_h+...-\theta_pX_{h+1-p})&=\sum_{j=1}^qb_{h,j}(X_{h+1-j}-\tilde{X}_{h+1-j})\sigma^{-1}\\
+        \end{split}
+    \end{equation*}
+    and recovering $\tilde{X}_{h+1}$ completes the proof.
+\end{proof}
+
+\begin{remark}
+    \[
+        MSE(\tilde{X}_{h+1})=\expect{(X_{h+1}-\tilde{X}_{h+1})^2}=\sigma^2\expect{(Y_{h+1}*\tilde{Y}_{h+1})^2}=\sigma^2MSE(\tilde{X}_{h+1}) 
+    \]
+    Moreover, if $(X_t)$ is invertible then $MSE(\tilde{Y}_{h+1})\to1$ when $h\to\infty$ an also $b_{h,j}\to\phi_j$ for $j=1,2,...,q$ when $h\to\infty$.
+\end{remark}
+
+It is also possible to fit a $MA(q)$ model with the innovations algorithm:
+\[
+    X_t=W_t+\hat{b}_{q1}W_{t-1}+...+\hat{b}_{qq}W_{t-q}    
+\]
+with $(W_t)\sim\mathcal{WN}(0,\hat{v}_q^2)$ where the $\set{\hat{b}_{q,j}}_{j=1}^q$ and $\hat{v}_q^2$ are the \textbf{innovation estimates} obtained by the innovations algorithm with $\gamma_X(h)$ instead of $\hat{\gamma}_X(h)$. This is the \textbf{fitted innovations MA(q) model}. An other motivation to study this model is that $(X_t)$ is causal
+\[
+    X_t=\sum_{j\ge0}\psi_jW_{t-j}  
+\]
+where $\psi_0=1$ and $\psi_j=\phi_j+\sum_{k=1}^j\theta_k\psi_{j-k}$ for $j=1,2,...$ with $\theta_k=0$ for $k>p$ and $\phi_j=0$ for $j>q$ then we can estimate $\hat{\psi}_1,...,\hat{\psi}_{p+q}$ by using the innovation estimates by solving
+\[
+    \hat{\psi}_j=\sum_{k+1}^j\theta_k\hat{\psi}_{j-k} 
+\]
+in $\theta_k$ for $j=q+1,...,q+p$, denoting the solutions with $\hat{\theta}_1,...,\hat{\theta}_p$ and then solving
+\[
+    \hat{\psi}_j=\phi_j+\sum_{k=1}^j\hat{\theta}_k\hat{\psi}_{j-h}  
+\]
+in $\phi_j$ for $j=1,2,...,q$ and denoting the results as $\hat{\phi}_1,...,\hat{\phi}_1$.
+
+An other method that can be used in order to fit $ARMA(p,q)$ models is the \textbf{maximum likelihood estimator}. It has often a lower variance than other methods, but it requires the time series to be Gaussian, and is usually asymptotically robust; it also has optimization probles and requires a good starting point to converge to a good solution. The methods that we have just seen can provide a good starting point.
+
+Suppose $(X_t)$ a Gaussian $ARMA(p,q)$ model and $n$ as sample size. Then the likelihood function is 
+\[
+    \mathcal{L}(\boldsymbol{x}_n|\boldsymbol{\phi},\boldsymbol{\theta},\sigma^2)=\mathcal{L}(\boldsymbol{\phi},\boldsymbol{\theta},\sigma^2)  
+\]
+where $\boldsymbol{x}_n=(x_1,...,x_n)^\intercal$, $\boldsymbol{\phi}=(\phi_1,...,\phi_q)^\intercal$, $\boldsymbol{\theta}=(\theta_1,...,\theta_p)$ and $\sigma^2=\expect{W_t^2}$. Note that this likelihood function is equal to
+\[
+    \mathcal{L}(\boldsymbol{\phi},\boldsymbol{\theta},\sigma^2)=\left(\frac{1}{2\pi}\right)^{\frac{n}{2}}(det\boldsymbol{\Gamma}_n)^{-\frac{1}{2}}\exp\left\{-\frac{1}{2}\boldsymbol{x}_{(n)}^\intercal\boldsymbol{\Gamma}_n^{-1}\boldsymbol{x}_{(n)}\right\}
+\]
+where $\boldsymbol{\Gamma}_n=\expect{\boldsymbol{X}_{(n)}\boldsymbol{X}_{(n)}^\intercal}$ as $\expect{\boldsymbol{X}_{(n)}}=0$ and $\boldsymbol{X}_{(n)}=(X_1,...,X_n)^\intercal$. Remember also that
+\[
+    \boldsymbol{X}_{(n)}=\boldsymbol{A}_n^{-1}\boldsymbol{U}_{(n)}  
+\]
+where $\boldsymbol{A}_n=\boldsymbol{B}_n+\boldsymbol{I}_n$. Denote with $\boldsymbol{C}_n=\boldsymbol{A}_n^{-1}$ and note that $det\boldsymbol{C}_n=1$. We have that
+\begin{equation*}
+    \begin{split}
+        \boldsymbol{\Gamma}_n&=\expect{\boldsymbol{X}_{(n)}\boldsymbol{X}_{(n)}^\intercal}\\ 
+        &=\expect{\boldsymbol{C}_n\boldsymbol{U}_{(n)}\boldsymbol{U}_{(n)}^\intercal\boldsymbol{C}_n^\intercal}\\
+        &=\boldsymbol{C}_n\expect{\boldsymbol{U}_{(n)}\boldsymbol{U}_{(n)}^\intercal}\boldsymbol{C}_n^\intercal\\
+        &=\boldsymbol{C}_ndiag(\sigma^2v_1^2,...,\sigma^2v_n^2)\boldsymbol{C}_n^\intercal\\
+        &=\boldsymbol{C}_nMSE(\tilde{Y})\boldsymbol{C}_n^\intercal\\
+        &=\boldsymbol{C}_n\boldsymbol{D}_n\boldsymbol{C}_n^\intercal\\
+    \end{split}
+\end{equation*}
+then
+\[
+    det(\boldsymbol{\Gamma}_n)=det(\boldsymbol{C}_n)det(\boldsymbol{D}_n)det(\boldsymbol{C}_n^\intercal)=(\sigma^2)^nv_1^2...v_n^2
+\]
+We now hava that
+\[
+    \boldsymbol{x}_{(n)}^\intercal\boldsymbol{\Gamma}_n^{-1}\boldsymbol{x}_{(n)}=\boldsymbol{v}_{(n)}^\intercal\boldsymbol{C}_n^\intercal(\boldsymbol{C}_n^\intercal)^{-1}\boldsymbol{D}_n^{-1}\boldsymbol{C}_n^{-1}(\boldsymbol{C}_n)\boldsymbol{v}_{(n)}=\frac{1}{\sigma^2}\sum_{j=1}^n\frac{(x_j-\tilde{x}_j)^2}{v_j^2}
+\]
+Putting all together:
+\[
+    \mathcal{L}(\boldsymbol{\phi},\boldsymbol{\theta},\sigma^2)=\left(\frac{1}{2\pi\sigma^2}\right)^{\frac{n}{2}}\frac{1}{\sqrt{v_1^2...v_n^2}}\exp\left\{-\frac{1}{2\sigma^2}\sum_{j=1}^n\frac{(x_j-\tilde{x}_j)^2}{v_j^2}\right\}
+\]
+considering the log:
+\[
+    \log\mathcal{L}(\boldsymbol{\phi},\boldsymbol{\theta},\sigma^2)=-\frac{n}{2}\log2\pi-\frac{n}{2}\log\sigma^2-\frac{1}{2}\sum_{j=1}^n\log v_j^2--\frac{1}{2\sigma^2}\sum_{j=1}^{n}\frac{(x_j-\tilde{x}_j)^2}{v_j^2}
+\]
+and taking the partial derivative:
+\begin{equation*}
+    \begin{split}
+        \frac{\partial}{\partial\sigma^2}\log\mathcal{L}(\boldsymbol{\phi},\boldsymbol{\theta},\sigma^2)&=-\frac{n}{2}\log\sigma^2+\frac{1}{2}\frac{1}{\sigma^4}\sum_{j=1}^{n}\frac{(x_j-\tilde{x}_j)^2}{v_j^2}\\
+        &=-\frac{1}{2\sigma^2}\left(n-\frac{1}{\sigma^2}\sum_{j=1}^{n}\frac{(x_j-\tilde{x}_j)^2}{v_j^2}\right)\\
+    \end{split}
+\end{equation*}
+This quantity is equal to zero if and only if
+\[
+    \frac{1}{n}\sum_{j=1}^{n}\frac{(x_j-\tilde{x}_j)^2}{v_j^2}=\sigma^2 
+\]
+denote $S(\boldsymbol{\phi},\boldsymbol{\theta})=\sum_{j=1}^{n}\frac{(x_j-\tilde{x}_j)^2}{v_j^2}$. We now have that
+\[
+    MLE(\sigma^2)=\frac{S(\boldsymbol{\phi},\boldsymbol{\theta})}{n}  
+\]
+Now we will plug the estimated parameters in the likelihood function:
+\begin{equation*}
+    \begin{split}
+        \log\mathcal{L}(\boldsymbol{\phi},\boldsymbol{\theta},\sigma^2)&=-\frac{n}{2}\log2\pi-\frac{n}{2}\log\frac{S(\boldsymbol{\phi},\boldsymbol{\theta})}{n}-\frac{1}{2}\sum_{j=1}^n\log v_j^2-\frac{n}{2}\\
+        &=-\frac{n}{2}\left[\log\frac{S(\boldsymbol{\phi},\boldsymbol{\theta})}{n}+\frac{1}{n}\sum_{j=1}^n\log v_j^2+(1+\log2\pi)\right]\\
+        &=-\frac{n}{2}\left[l(\boldsymbol{\phi},\boldsymbol{\theta})+(1+\log2\pi)\right]\\
+    \end{split}
+\end{equation*}
+where $l(\boldsymbol{\phi},\boldsymbol{\theta})$ is called the \textbf{reduced log-likelihood function}. Now we have a method for estimating our parameters, since the $MLE(\boldsymbol{\phi})$ and the $MLE(\boldsymbol{\theta})$ are found by minimizing $l(\boldsymbol{\phi},\boldsymbol{\theta})$ when $(X_t)$ is causal. If $(X_t)$ is invertible then there is an alternative method: finding $\hat{\boldsymbol{\phi}}$ and $\hat{\boldsymbol{\theta}}$ least square estimates by minimizing $S(\boldsymbol{\phi},\boldsymbol{\theta})$ and then setting the estimate of $\sigma^2$ as
+\[
+    \hat{\sigma}^2=\frac{S(\hat{\boldsymbol{\phi}},\hat{\boldsymbol{\theta})}}{(n-p-q)}  
+\]
+
+Now we will see an other type of model: \textbf{ARIMA (autoregressive-integrated moving average)}.
+\begin{definition}
+    A time series is $(X_t)\sim ARIMA(p,d,q)$ if $\left((1-B)^dX_t\right)\sim ARMA(p,q)$ causal.
+\end{definition}
+
+\begin{example}
+    If $(1-\theta B)(1-B)X_t=W_t$ with $t\in\Z$ and $\abs{\theta}<1$ then $(1-\theta B)Y_t=W_t$ with $Y_t=(1-B)X_t$ is an $ARMA$ model and $(X_t)$ is an $ARIMA(1,1,0)$ model.
+\end{example}
+
+\begin{remark}
+    $(X_t)$ is the solution of $\theta^*(B)X_t=\phi(B)W_t$ with $\theta^*(B)=\theta(Z)(1-Z)^d$ which has a zero of order $d$ at $Z=1$.
+\end{remark}
