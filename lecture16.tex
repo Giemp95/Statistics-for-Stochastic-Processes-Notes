@@ -1,0 +1,395 @@
+\section{Lecture 16}
+\label{lecture16}
+
+\begin{center}
+    \textbf{How to chose the order p and q for ARMA(p,q) in fitting: Akaike index. The parsimony principle. Evaluation of the accuracy. Case studies in R: decomposition in an additive model, analysis, fitting, and forecasting of the residual terms. SARIMA models.}
+\end{center}
+
+\begin{example}
+    \begin{verbatim}
+
+    #############################
+    # fitting and forecasting
+    #############################
+    
+    #load the dataset
+    library(TSA)
+    data(tempdub)
+    mean(tempdub)
+    
+    #plot the data
+    windows()
+    plot(tempdub,ylab='temperature',type='o')
+    
+    # plot ACF and PACF
+    library(astsa)
+    windows()
+    acf2(tempdub,max.lag=80)
+    
+    # test stationarity
+    library(tseries)
+    adf.test(tempdub)
+    kpss.test(tempdub)
+    
+    # Guess AR(6): order=c(p,d,q) -> AR(p) & MA(q)
+    (out1=arima(tempdub,order=c(6,0,0))
+    # The forecasted values of time series with the errors
+    rec.pr=predict(out1,n.ahead=25)
+    
+    # To print the values:
+    # - the first vector gives the predicted values
+    # - the second vector gives the standard errors
+    str(rec.pr)
+    
+    # To plot the forecasting: n.ahead=lead time
+    windows()
+    plot(out1,n.ahead=25,type='b')
+    \end{verbatim}
+\end{example}
+
+\begin{proposition}
+    Consider $f(\boldsymbol{x}, \boldsymbol{\theta}_{(k)})$ a pdf such that
+    \[
+        \boldsymbol{\theta}_{(k)}=(\theta_1,...,\theta_k)\in\Theta_k\subseteq\R^k  
+    \]
+    and $g(\boldsymbol{x}|\boldsymbol{\theta}_{(k)})$ an approximation of $f$ such that
+    \[
+        G(k)=\set{g(\boldsymbol{x}|\boldsymbol{\theta}_{(k)})/\boldsymbol{\theta}_{(k)}\in\Theta_k}  
+    \]
+    is a k-dimensional parametric class of the pdf. Consider also 
+    \[
+        G=\set{G(k_1),...,G(k_l)}  
+    \]
+    Which $k\in\set{k_1,...,k_l}$ gives the best approximation $g$ to $f$? Firstly we need a measure of 'disparity' between $g$ and $f$, and we also need the estimates of the parameters $\boldsymbol{\theta}_{(k)}$, which can be obtained by the ML estimation $\hat{\boldsymbol{\theta}}_{(k)}=MLE(\boldsymbol{\theta}_{(k)})$ with $\boldsymbol{\theta}_{(k)}\in\Theta_k$; in this way we identify a set $g(\boldsymbol{x}|\hat{\boldsymbol{\theta}}_{(k_1)}),...,g(\boldsymbol{x}|\hat{\boldsymbol{\theta}}_{(k_l)})$. About the measurement of disparity all the information we need is in the \textbf{likeliyhood ratio}: given $H_0:\theta=\theta_0$ and $H_1:\theta=\theta_1$ the the critical region is defined by the likelyhood ratio
+    \[
+        \frac{L(\boldsymbol{x}|\theta_0)}{L(\boldsymbol{x}|\theta_1)}  
+    \]
+    So, as a measuring tool for our case, we can use
+    \[
+        \int_{\R^n}\Phi\left(\frac{g(\boldsymbol{x}|\boldsymbol{\theta}_{(k)})}{f(\boldsymbol{x})}\right)f(\boldsymbol{x})d\boldsymbol{x}
+    \]
+    Akaike, in his seminal paper, proposes to use $\Phi(t)=-2\log t$, which implies that
+    \begin{equation*}
+        \begin{split}
+            W(f,g)&=-2\int_{\R^n}\log\frac{g(\boldsymbol{x}|\boldsymbol{\theta}_{(k)})}{f(\boldsymbol{x})}\\
+            &=2\int_{\R^n}\log\frac{f(\boldsymbol{x})}{g(\boldsymbol{x}|\boldsymbol{\theta}_{(k)})}\\
+        \end{split}
+    \end{equation*}
+    which is the well-known Kullback-Leibler information (or divergence), which measures the difference between two distributions.
+\end{proposition}
+
+\begin{definition}
+    The \textbf{Kullback-Leibler information (or divergence)} is defined as
+    \[
+        KL(f,g)=\mathbb{E}_f\left[\ln\frac{f}{g}\right]  
+    \]
+    where $f,g$ are pdf with the same support.
+\end{definition}
+
+\begin{remark}
+    Some remarks:
+    \begin{itemize}
+        \item $KL(f,g)\ge0$ and $KL(f,g)=0\iff f=g$
+        \item $KL(f,g)$ is not a distance: $KL(f,g)\ne KL(g,f)$
+    \end{itemize}
+\end{remark}
+
+In our case, $f$ is the true model and $g$ the approximating model. Therefore
+\begin{equation*}
+    \begin{split}
+        KL(f,g)&=\int_{\R^n}\ln\frac{f(\boldsymbol{x})}{g(\boldsymbol{x}|\boldsymbol{\theta}_{(k)})}f(\boldsymbol{x})d\boldsymbol{x}\\
+        &=\int_{\R^n}\ln f(\boldsymbol{x})f(\boldsymbol{x})d\boldsymbol{x}-\int_{\R^n}\ln g(\boldsymbol{x}|\boldsymbol{\theta}_{(k)}f(\boldsymbol{x})d\boldsymbol{x}\\
+    \end{split}
+\end{equation*}
+gives the information lost in replacing $f(\boldsymbol{x})$ with $g(\boldsymbol{x}|\boldsymbol{\theta})$. Taking into account the proposal of Akaike, set $d(\boldsymbol{\theta}_{(k)})=\mathbb{E}_f(-2\ln g(\boldsymbol{x}|\boldsymbol{\theta}_{(k)}))$ so that we have
+\[
+    W(f,g)=2KL(f,g)=d(\boldsymbol{\theta}_{(k)})-\mathbb{E}_f[-2\ln f(\boldsymbol{x})]  
+\]
+note that this last expectation does not depend on $\boldsymbol{\theta}_{(k)}$, so any ranking of a set of candidate models based on the KL information would be equivalent to a ranking based on $d(\boldsymbol{\theta}_{(k)})$. So in order to select among a set of approximating models $d(\boldsymbol{\theta}_{(k)})$ is used instead of the KL information. This quantity takes the name of \textbf{Kullback discrepancy}. Unfortunately, it is not possible to calculate this quantity since $f(\boldsymbol{x})$ is not known; but we can use an estimator of it; in his work Akaike proves that
+\[
+    -2\ln g(\boldsymbol{x}|\hat{\boldsymbol{\theta}}_{(k)})  
+\]
+is a biased estimator of $d(\boldsymbol{\theta}_{(k)})$ and that 
+\[
+    \expect{-2\ln g(\boldsymbol{x}|\hat{\boldsymbol{\theta}}_{(k)})}+2k\stackrel{n}{\longrightarrow}\expect{d\left(\hat{\boldsymbol{\theta}}_{(k)}\right)}
+\]
+An empirical rule to choose an approximating model is then to choose a $k$ that minimizes this \textbf{Akaike Information Criterion}.
+
+Another fundamental topic for choosing a model is performance measurement. One simple of such metrics is the \textbf{forecast error}:
+\[
+     e_t=x_t-\tilde{x}_{t|T} 
+\]
+where $x_t$ are the original observations and $\tilde{x}_{t|T}$ are the forecasted values obtained by the fitted model on $\set{x_1,...,x_t}$ (the training set) with $t=T+1,...,n$. This function measures the forecast accuracy in different ways by using different indexes, which are
+\begin{itemize}
+    \item \textbf{Mean Error (ME)} = $mean(e_t)$, also called \textbf{forecast bias}
+    \item \textbf{Mean Absolute Error (MAE)} = $mean(\abs{e_t})$
+    \item \textbf{Root Mean Squared Error (RMSE)} = $\sqrt{mean(e_t^2)}$
+    \item \textbf{Mean Percentage Error (MPE)} = $mean(p_t)$ with $p_t=100\frac{e_t}{x_t}$
+    \item \textbf{Mean Absolute Percentage Error (MAPE)} = $mean(\abs{p_t})$
+    \item \textbf{Mean Absolute Scaled Error (MASE)} = $mean(q_t)$ with
+        \begin{itemize}
+            \item for non seasonal time series $q_t=\frac{e_t}{\frac{1}{T-1}\sum_{t=2}^T\abs{y_t-y_{t-1}}}$
+            \item for seasonal time series $q_t=\frac{e_t}{\frac{1}{T-m}\sum_{t=m+1}^T\abs{y_t-y_{t-m}}}$
+        \end{itemize}
+        where $y_t$ is the naive forecast at time $t$, $T$ is the trainig set size and $m$ is the period of the seasonal component.
+    \item \textbf{ACF1}, which is the correlation function at lag 1 of the forecast error.
+\end{itemize}
+All these metrics can also be computed on the training set:
+\[
+    e_t=x_t-\tilde{x}_t  
+\]
+with $t=1,...,T$.
+
+\begin{example}
+    \begin{verbatim}
+
+#
+# Exercise: by using the output of PREDICT, replicate the previous plot.
+#
+# Changing the order p? The AIC index
+
+# Guess AR(8): check AIC index
+(out2=arima(tempdub,order=c(8,0,0)))
+
+# Guess AR(6): check AIC index
+(out1=arima(tempdub,order=c(6,0,0)))
+
+# Similar AIC: parcimony principle, choose p=6
+# evaluating the accuracy
+library(forecast)
+(train.rem = window(tempdub, start=start(tempdub), end=c(1973,12)))
+(test.rem = window(tempdub, start=c(1974,1), end=end(tempdub)))
+(out1train=arima(train.rem,order=c(6,0,0)))
+rec.pr.train=predict(out1train,n.ahead=24)
+
+# plot train data + test data + forecasted data
+windows()
+plot(test.rem,col="red",main='Forecasted vs test data')
+lines(rec.pr.train$pred,type='o',col="blue")
+legend("bottomright", legend = c("test set", "forecasted"),
+lty = 1, col=c('red','blue'),
+title = "Line colors", cex = 1.0)
+
+# accuracy
+class(rec.pr.train$pred)
+accuracy(rec.pr.train$pred,test.rem)
+
+# different ways to extract the the training data and the test data
+(train.rem=head(tempdub,12*10))
+(test.rem=tail(tempdub, 12*2))
+
+
+# Solution of the exercise
+# set the upper and lower bounds
+U=rec.pr$pred+qnorm(0.975)*rec.pr$se
+L=rec.pr$pred-qnorm(0.975)*rec.pr$se
+
+# set the yaxis
+minx=min(tempdub,L)
+maxx=max(tempdub,U)
+
+# produce the plot
+windows()
+ts.plot(tempdub,rec.pr$pred,ylim=c(minx,maxx),main='Forecasting')
+
+# add a red line for the forecasted values
+lines(rec.pr$pred,col='red',type='o')
+
+# add blue lines for upper and lower bounds
+lines(U,col='blue',lty='dashed')
+lines(L,col='blue',lty='dashed')
+    \end{verbatim}
+\end{example}
+
+\begin{example}
+    \begin{verbatim}
+
+####################################
+# the forecast package: jj
+####################################
+
+# load the libraries
+library(astsa)
+library(forecast)
+library(tseries)
+
+#load the data
+data(jj)
+
+# ndiffs to get a suggestion for the iterated difference operator
+(ndiffs(log(jj)))
+
+# consider diff(log(jj))
+workjj=diff(log(jj))
+
+# be aware: the starting point is now changed
+start(workjj)
+start(jj)
+
+# decomposition
+windows()
+comp=stl(workjj, 'per')
+plot(comp)
+
+# looking for a model for the reminder term
+(reminder=comp$time.series[,3])
+
+# check stationarity
+mean(reminder)kpss.test(reminder)
+adf.test(reminder)
+
+# ACF and PACF
+windows()
+acf2(reminder,max.lag=40)
+
+# a different way to choose the parameters using
+# the package "forecast"
+(fit=auto.arima(reminder))
+
+# check causality and invertibility
+windows()
+plot(fit)
+
+# plot Arima model versus original time series
+windows()
+plot(reminder,col="red")
+lines(fitted(fit),type='o',col="blue")
+legend("bottomright", legend = c("dataset", "fitting"),
+lty = 1, col=c('red','blue'),
+title = "Line colors", cex = 1.0)
+
+# check residuals of the fitted ARMA
+windows()
+checkresiduals(fit,plot=TRUE)
+jarque.bera.test(fit$residuals)
+
+# forecast: lead time = 20 steps
+ffit=forecast(fit,h=20)
+windows()
+plot(ffit)
+
+# print the predicted values with bounds
+ffit$mean
+head(ffit$lower,10)
+head(ffit$upper,10)
+
+# evaluate the accuracy of fitting/forecasting
+# split the reminder term in training set and test set
+(train.rem = head(reminder, 67))
+(test.rem = tail(reminder, 4*4))
+(fit.train=auto.arima(train.rem))
+ffit.test=forecast(fit.train,h=16)
+
+# plot forecasted vs test data
+windows()
+plot(test.rem,col="red",main='Forecasted vs test data')
+lines(ffit.test$mean,type='o',col="blue")
+legend("topleft", legend = c("test set", "forecast"),
+lty = 1, col=c('red','blue'),
+title = "Line colors", cex = 1.0)
+
+# accuracy ARMA(3,0)
+class(ffit.test)
+accuracy(ffit.test,test.rem)
+
+# accuracy ARMA(3,0,1)
+fit.train1=arima(train.rem,order=c(3,0,1))
+ffit.test1=predict(fit.train1,n.ahead=16)accuracy(ffit.test1$pred,test.rem)
+
+# plot forecasted vs test data
+windows()
+plot(test.rem,col="red",main='Forecasted vs test data')
+lines(ffit.test$mean,type='o',col="blue")
+lines(ffit.test1$pred,type='o',col="green")
+legend("topleft", legend = c("test set", "forecast 3,0", "forecast 3,1"),
+lty = 1, col=c('red','blue','green'),
+title = "Line colors", cex = 1.0)
+
+# what happens with auto.arima(workjj)?
+(fit.workjj=auto.arima(workjj))
+    \end{verbatim}
+\end{example}
+
+Up to now, we have worked with additive models, but sometimes a deterministic seasonal component is not suitable (es. economics). In such a case, it is helpful to introduce \textbf{autoregressive moving average seasonal operators}.
+
+\begin{definition}
+    $(X_t)\sim ARMA(P,Q)_s$ if it is the stationary solution of
+    \[
+        \Theta_P(B^s)X_t=\Phi_Q(B^s)W_t  
+    \]
+    where $W_t\sim WN(0,\sigma^2)$ and
+    \[
+      \Theta_p(B^s)=1-\tilde{\theta}_1B^s+...-\tilde{\theta}_PB^{Ps}
+    \]
+    is the seasonal autoregressive operator and
+    \[
+        \Phi_Q(B^s)=1+\tilde{\phi}_1B^s+...+\tilde{\phi}_QB^{Qs}
+    \]
+\end{definition}
+
+Now we can combine the seasonal operators ($\Theta_P(B^S),\Phi_Q(B^S)$) and the non-seasonal operators ($\theta(B),\phi(B)$) in order to obtain a \textbf{multiplicative seasonal ARMA model}, which is the solution to
+\[
+    \theta(B)\Theta_P(B^S)X_T=\phi(B)\Phi_Q(B^S)W_t
+\]
+and we can also add non-stationarity by considering that
+\[
+    X_t=(1-B)^d\tilde{X}_t  
+\]
+but we can go one step further considering that the non-stationarity can be in the seasonal component.
+
+\begin{example}
+    Consider
+    \[
+        X_t=S_t+W_t  
+    \]
+    with $S_t$ is a random walk such that $S_t=S_{t-12}+W_t'$ with $(W_t),(W_t')\sim WN$ uncorrelated. Observe that
+    \begin{equation*}
+        \begin{split}
+            \nabla_{12}X_t&=(1-B^{12})X_t\\
+            &=X_t-X_{t-12}\\
+            &=S_t+W_t-S_{t-12}-W_{t-12}\\
+            &=W_t'+W_t-W_{t-12}
+        \end{split}
+    \end{equation*}
+    so this is a stationary time series. So it is possible to recover a stationary time series by applying the difference operator taking into account the period of the non stationary component.
+\end{example}
+
+\begin{definition}
+    If $d$ and $D$ are non-negative integes then $(X_t)\sim\textbf{ARIMA}(p,d,q)\times(P,D,Q)_s$ \textbf{(seasonal ARIMA)} with period $s$ if
+    \[
+        Y_t=(1-B)^d(1-B^s)^DX_t  
+    \]
+    is a multiplicative seasonal ARMA model.
+\end{definition}
+
+\begin{example}
+    Suppose $(X_t)\sim SARIMA(1,1,0)\times(1,1,2)_{12}$. $(X_t)$ is such that $Y_t=(1-B)(1-B^{12})$ is a solution of
+    \[
+        \theta(B)\Theta_1(B^{12})Y_t=\phi(B)\Phi_2(B^12)W_t  
+    \]
+    where
+    \begin{itemize}
+        \item $\theta(B)=1-\theta_1B,\ \phi(B)=1$
+        \item $\Theta_1(B^{12})=1-\tilde{\theta}_1B^{12}$
+        \item $\Phi_2(B^{12})=1+\tilde{\phi}_1B^{12}+\tilde{\phi}_2B^{24}$
+    \end{itemize}
+\end{example}
+
+\begin{example}
+    Consider $(X_t)\sim SARIMA(0,0,1)\times(1,1,0)_4$ so $(X_t)$ is such that $Y_t=(1-B)^0(1-B^4)^1X_t$ is a solution of
+    \[
+        \theta(B)\Theta_1(B^4)Y_t=\phi(B)\Phi_0(B)^4W_t
+    \]
+    where
+    \begin{itemize}
+        \item $\theta(B)=1$
+        \item $\Theta_1(B^4)=1-sar1B^4$
+        \item $\phi(B)=1+ma1B$
+        \item $\Phi_0(B^4)=1$
+    \end{itemize}
+    according to the results of the R functions.
+\end{example}
+
+\begin{remark}
+    The parsimony principle should always guide the choice of the parameters. An empirical rule suggest that $p+d+q+P+D+Q\le6$.
+\end{remark}
